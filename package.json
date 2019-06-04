@@ -1,0 +1,19 @@
+{
+  "name": "utopia-airlines-online-api",
+  "version": "0.0.1",
+  "description": "Utopia Airlines middleware API for online (unmediated) ticket reservation and cancellation",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kingjon3377/UtopiaAirlinesOnlineAPI.git"
+  },
+  "author": "Nova Tech Team at SmoothStack",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/kingjon3377/UtopiaAirlinesOnlineAPI/issues"
+  },
+  "homepage": "https://github.com/kingjon3377/UtopiaAirlinesOnlineAPI#readme"
+}

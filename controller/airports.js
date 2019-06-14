@@ -8,3 +8,16 @@ router.get('/airports', function(req, res) {
             res.send(body);
     });
 });
+
+router.get('/airport/:code', function(req, res) {
+	if (!req.params.code) {
+		res.status(400);
+		res.send('Airport code required');
+	} else {
+		request.get(searchEndpoint + '/airportDetails?airport=' + req.params.code,
+			{}, function(err, response, body) {
+				res.status(response.statusCode);
+				res.send(body);
+			});
+	}
+});

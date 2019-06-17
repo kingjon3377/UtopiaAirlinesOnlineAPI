@@ -1,3 +1,4 @@
+'use strict';
 const request = require('request');
 const router = require('express').Router();
 const searchEndpoint = process.env.SEARCH_ENDPOINT;

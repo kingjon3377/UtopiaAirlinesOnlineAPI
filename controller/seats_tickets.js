@@ -94,7 +94,7 @@ router.post('/flight/:flightId/seat/:row/:seatId/ticket', function(req, res) {
 	}
 });
 
-router.post('/flight/:flightId/seat/:row/:seatId/ticket', function(req, res) {
+router.delete('/flight/:flightId/seat/:row/:seatId/ticket', function(req, res) {
         if (!req.params.flightId || !req.params.row || !req.params.seatId) {
                 res.status(400);
                 res.send('Flight number, row, and seat required');

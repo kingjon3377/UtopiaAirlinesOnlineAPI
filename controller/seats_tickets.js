@@ -55,16 +55,16 @@ router.put('/flight/:flightId/seat/:row/:seatId/ticket', function(req, res) {
                 let body = req.body;
 		if (body.price) {
 			request.put(bookingEndpoint + '/booking/pay/flights/' +
-				req.params.flightId + '/rows/' + req.params.row
-				+ '/seats/' + req.params.seatId, {'price': body.price},
+				req.params.flightId + '/rows/' + req.params.row + '/seats/' +
+				req.params.seatId, { 'price': body.price },
 				function(err, response, body) {
 					res.status(response.statusCode);
 					res.send(body);
 				});
 		} else {
 			request.put(bookingEndpoint + '/booking/extend/flights/' +
-				req.params.flightId + '/rows/' + req.params.row
-				+ '/seats/' + req.params.seatId, {}, function(err, response, body) {
+				req.params.flightId + '/rows/' + req.params.row +
+				'/seats/' + req.params.seatId, {}, function(err, response, body) {
 					res.status(response.statusCode);
 					res.send(body);
 				});
@@ -83,10 +83,10 @@ router.post('/flight/:flightId/seat/:row/:seatId/ticket', function(req, res) {
 			res.status(400);
 			res.send('Reserver required');
 		} else {
-			request.post(bookingEndpoint + '/booking/book/flights/'
-				+ req.params.flightId + '/rows/' +
-				req.params.row + '/seats/' + req.params.seatId,
-				body.reserver, function(err, response, body) {
+			request.post(bookingEndpoint + '/booking/book/flights/' +
+				req.params.flightId + '/rows/' + req.params.row +
+				'/seats/' + req.params.seatId, body.reserver,
+				function(err, response, body) {
 					res.status(response.statusCode);
 					res.send(body);
 				});
@@ -99,8 +99,8 @@ router.post('/flight/:flightId/seat/:row/:seatId/ticket', function(req, res) {
                 res.status(400);
                 res.send('Flight number, row, and seat required');
         } else {
-		request.get(bookingEndpoint + '/booking/details/flights/' + req.params.flightId
-			+ '/rows/' + req.params.row + '/seats/' + req.params.seatId, {},
+		request.get(bookingEndpoint + '/booking/details/flights/' + req.params.flightId +
+			'/rows/' + req.params.row + '/seats/' + req.params.seatId, {},
 			function(err, response, body) {
 				const returned = JSON.parse(body);
 				if (!returned.reserved) {

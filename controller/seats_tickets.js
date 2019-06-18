@@ -56,7 +56,7 @@ router.put('/flight/:flightId/seat/:row/:seatId/ticket', function(req, res) {
 		if (body.price) {
 			request.put(bookingEndpoint + '/booking/pay/flights/' +
 				req.params.flightId + '/rows/' + req.params.row + '/seats/' +
-				req.params.seatId, { 'price': body.price },
+				req.params.seatId, { body: {'price': body.price }},
 				function(err, response, body) {
 					res.status(response.statusCode);
 					res.send(body);

@@ -190,3 +190,5 @@ router.delete('/booking/:bookingCode', function(req, res) {
 		});
 }
 });
+
+module.exports = router;

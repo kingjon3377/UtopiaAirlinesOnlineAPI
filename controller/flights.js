@@ -23,3 +23,4 @@ router.get('/flight/:flightId', function(req, res) {
         }
 });
 
+module.exports = router;

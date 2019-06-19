@@ -22,3 +22,5 @@ router.get('/airport/:code', function(req, res) {
 			});
 	}
 });
+
+module.exports = router;

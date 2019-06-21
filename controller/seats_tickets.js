@@ -12,8 +12,14 @@ router.get('/flight/:flightId/seats', function(req, res) {
         } else {
                 request.get(searchEndpoint + '/seats?flight=' +
                         req.params.flightId, {}, function(err, response, body) {
-                                res.status(response.statusCode);
-                                res.send(body);
+				if (err) {
+					res.status(500);
+					console.log(err);
+					res.send();
+				} else {
+					res.status(response.statusCode);
+					res.send(body);
+				}
                         });
         }
 });
@@ -26,8 +32,14 @@ router.get('/flight/:flightId/seat/:row/:seatId', function(req, res) {
                 request.get(searchEndpoint + '/seat?flight=' +
                         req.params.flightId + '&row=' + req.params.row +
                         '&seat=' + req.params.seatId, {}, function(err, response, body) {
-                                res.status(response.statusCode);
-                                res.send(body);
+				if (err) {
+					res.status(500);
+					console.log(err);
+					res.send();
+				} else {
+					res.status(response.statusCode);
+					res.send(body);
+				}
                         });
         }
 });
@@ -41,8 +53,14 @@ router.get('/flight/:flightId/seat/:row/:seatId', function(req, res) {
                 request.get(searchEndpoint + '/ticket?flight=' +
                         req.params.flightId + '&row=' + req.params.row +
                         '&seat=' + req.params.seatId, {}, function(err, response, body) {
-                                res.status(response.statusCode);
-                                res.send(body);
+				if (err) {
+					res.status(500);
+					console.log(err);
+					res.send();
+				} else {
+					res.status(response.statusCode);
+					res.send(body);
+				}
                         });
         }
 });
@@ -59,15 +77,27 @@ router.put('/flight/:flightId/seat/:row/:seatId/ticket', function(req, res) {
 				req.params.flightId + '/rows/' + req.params.row + '/seats/' +
 				req.params.seatId, { body: {'price': body.price }},
 				function(err, response, body) {
-					res.status(response.statusCode);
-					res.send(body);
+					if (err) {
+						res.status(500);
+						console.log(err);
+						res.send();
+					} else {
+						res.status(response.statusCode);
+						res.send(body);
+					}
 				});
 		} else {
 			request.put(bookingEndpoint + '/booking/extend/flights/' +
 				req.params.flightId + '/rows/' + req.params.row +
 				'/seats/' + req.params.seatId, {}, function(err, response, body) {
-					res.status(response.statusCode);
-					res.send(body);
+					if (err) {
+						res.status(500);
+						console.log(err);
+						res.send();
+					} else {
+						res.status(response.statusCode);
+						res.send(body);
+					}
 				});
 		}
 	}
@@ -86,10 +116,16 @@ router.post('/flight/:flightId/seat/:row/:seatId/ticket', function(req, res) {
 		} else {
 			request.post(bookingEndpoint + '/booking/book/flights/' +
 				req.params.flightId + '/rows/' + req.params.row +
-				'/seats/' + req.params.seatId, body.reserver,
+				'/seats/' + req.params.seatId, { json: { 'id': body.reserver.id } },
 				function(err, response, body) {
-					res.status(response.statusCode);
-					res.send(body);
+					if (err) {
+						res.status(500);
+						console.log(err);
+						res.send();
+					} else {
+						res.status(response.statusCode);
+						res.send(body);
+					}
 				});
 		}
 	}
@@ -103,24 +139,42 @@ router.delete('/flight/:flightId/seat/:row/:seatId/ticket', function(req, res) {
 		request.get(bookingEndpoint + '/booking/details/flights/' + req.params.flightId +
 			'/rows/' + req.params.row + '/seats/' + req.params.seatId, {},
 			function(err, response, body) {
-				const returned = JSON.parse(body);
-				if (!returned.reserved) {
-					res.status(204);
+				if (err) {
+					res.status(500);
+					console.log(err);
 					res.send();
-				} else if (returned.price) {
-					request.delete(cancellationEndpoint + '/cancel/ticket/flight/' +
-						req.params.flightId + '/row/' + req.params.row + '/seat/' +
-						req.params.seatId, {}, function(err, response, body) {
-							res.status(response.statusCode);
-							res.send(body);
-					});
 				} else {
-					request.delete(bookingEndpoint + '/booking/book/flights/' +
-						req.params.flightId + '/rows/' + req.params.row + '/seats/' +
-						req.params.seatId, {}, function(err, response, body) {
-							res.status(response.statusCode);
-							res.send(body);
-					});
+					const returned = JSON.parse(body);
+					if (!returned.reserved) {
+						res.status(204);
+						res.send();
+					} else if (returned.price) {
+						request.delete(cancellationEndpoint + '/cancel/ticket/flight/' +
+							req.params.flightId + '/row/' + req.params.row + '/seat/' +
+							req.params.seatId, {}, function(err, response, body) {
+								if (err) {
+									res.status(500);
+									console.log(err);
+									res.send();
+								} else {
+									res.status(response.statusCode);
+									res.send(body);
+								}
+						});
+					} else {
+						request.delete(bookingEndpoint + '/booking/book/flights/' +
+							req.params.flightId + '/rows/' + req.params.row + '/seats/' +
+							req.params.seatId, {}, function(err, response, body) {
+								if (err) {
+									res.status(500);
+									console.log(err);
+									res.send();
+								} else {
+									res.status(response.statusCode);
+									res.send(body);
+								}
+						});
+					}
 				}
 			});
 	}
@@ -133,8 +187,14 @@ router.get('/booking/:bookingCode', function(req, res) {
 	} else {
 		request.get(bookingEndpoint + '/booking/details/bookings/' + req.params.bookingCode, {},
 			function (err, response, body) {
-				res.status(response.statusCode);
-				res.send(body);
+				if (err) {
+					res.status(500);
+					console.log(err);
+					res.send();
+				} else {
+					res.status(response.statusCode);
+					res.send(body);
+				}
 			});
 	}
 });
@@ -150,14 +210,26 @@ router.put('/booking/:bookingCode', function(req, res) {
 			request.put(bookingEndpoint + '/booking/pay/bookings/' +
 				req.params.bookingCode, { body: {'price': body.price }},
 				function(err, response, body) {
-					res.status(response.statusCode);
-					res.send(body);
+					if (err) {
+						res.status(500);
+						console.log(err);
+						res.send();
+					} else {
+						res.status(response.statusCode);
+						res.send(body);
+					}
 				});
 		} else {
 			request.put(bookingEndpoint + '/booking/extend/bookings/' +
 				req.params.bookingCode, {}, function(err, response, body) {
-					res.status(response.statusCode);
-					res.send(body);
+					if (err) {
+						res.status(500);
+						console.log(err);
+						res.send();
+					} else {
+						res.status(response.statusCode);
+						res.send(body);
+					}
 				});
 		}
 	}
@@ -170,25 +242,43 @@ router.delete('/booking/:bookingCode', function(req, res) {
 	} else {
 		request.get(bookingEndpoint + '/booking/details/bookings/' + req.params.bookingCode, {},
 		function(err, response, body) {
-			const returned = JSON.parse(body);
-			if (!returned.reserved) {
-				res.status(204);
+			if (err) {
+				res.status(500);
+				console.log(err);
 				res.send();
-			} else if (returned.price) {
-				request.delete(cancellationEndpoint + '/cancel/ticket/booking/' +
-					req.params.bookingCode, {}, function(err, response, body) {
-						res.status(response.statusCode);
-						res.send(body);
-				});
 			} else {
-				request.delete(bookingEndpoint + '/booking/book/bookings/' +
-					req.params.bookingCode, {}, function(err, response, body) {
-						res.status(response.statusCode);
-						res.send(body);
-				});
+				const returned = JSON.parse(body);
+				if (!returned.reserved) {
+					res.status(204);
+					res.send();
+				} else if (returned.price) {
+					request.delete(cancellationEndpoint + '/cancel/ticket/booking/' +
+						req.params.bookingCode, {}, function(err, response, body) {
+							if (err) {
+								res.status(500);
+								console.log(err);
+								res.send();
+							} else {
+								res.status(response.statusCode);
+								res.send(body);
+							}
+					});
+				} else {
+					request.delete(bookingEndpoint + '/booking/book/bookings/' +
+						req.params.bookingCode, {}, function(err, response, body) {
+							if (err) {
+								res.status(500);
+								console.log(err);
+								res.send();
+							} else {
+								res.status(response.statusCode);
+								res.send(body);
+							}
+					});
+				}
 			}
 		});
-}
+	}
 });
 
 module.exports = router;

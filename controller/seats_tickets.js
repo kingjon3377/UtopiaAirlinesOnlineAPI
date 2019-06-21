@@ -29,10 +29,9 @@ router.get('/flight/:flightId/seat/:row/:seatId', function(req, res) {
                 res.status(400);
                 res.send('Flight number, row, and seat required');
         } else {
-			// TODO: Switch to booking service for this; search service filters out booked tickets.
-                request.get(searchEndpoint + '/ticket?flight=' +
-                        req.params.flightId + '&row=' + req.params.row +
-                        '&seat=' + req.params.seatId, {}, function(err, response, body) {
+                request.get(bookingEndpoint + '/details/flights/' +
+                        req.params.flightId + '/rows/' + req.params.row +
+                        '/seats/' + req.params.seatId, {}, function(err, response, body) {
 				if (err) {
 					res.status(500);
 					console.log(err);

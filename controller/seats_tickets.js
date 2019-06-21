@@ -10,6 +10,7 @@ router.get('/flight/:flightId/seats', function(req, res) {
                 res.status(400);
                 res.send('Flight number required');
         } else {
+		// FIXME: Search service doesn't yet provide this
                 request.get(searchEndpoint + '/seats?flight=' +
                         req.params.flightId, {}, function(err, response, body) {
 				if (err) {

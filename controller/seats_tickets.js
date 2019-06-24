@@ -140,27 +140,27 @@ router.delete('/booking/:bookingCode', function(req, res) {
 			res.send('Booking code required');
 	} else {
 		request.get(`${bookingEndpoint}/booking/details/bookings/${req.params.bookingCode}`,
-			{}, function(err, response, body) { // FIXME: Fix indentation of this function
-			if (err) {
-				res.status(500);
-				console.log(err);
-				res.send();
-			} else {
-				const returned = JSON.parse(body);
-				if (!returned.reserved) {
-					res.status(204);
+			{}, function(err, response, body) {
+				if (err) {
+					res.status(500);
+					console.log(err);
 					res.send();
-				} else if (returned.price) {
-					request.delete(
-						`${cancellationEndpoint}/cancel/ticket/booking/${req.params.bookingCode}`,
-						{}, handleBackendResponse(res));
 				} else {
-					request.delete(
-						`${bookingEndpoint}/booking/book/bookings/${req.params.bookingCode}`,
-						{}, handleBackendResponse(res));
+					const returned = JSON.parse(body);
+					if (!returned.reserved) {
+						res.status(204);
+						res.send();
+					} else if (returned.price) {
+						request.delete(
+							`${cancellationEndpoint}/cancel/ticket/booking/${req.params.bookingCode}`,
+							{}, handleBackendResponse(res));
+					} else {
+						request.delete(
+							`${bookingEndpoint}/booking/book/bookings/${req.params.bookingCode}`,
+							{}, handleBackendResponse(res));
+					}
 				}
-			}
-		});
+			});
 	}
 });
 

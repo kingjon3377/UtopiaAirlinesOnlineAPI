@@ -19,33 +19,33 @@ function handleBackendResponse(outgoingResponse) {
 }
 
 router.get('/flight/:flightId/seats', function(req, res) {
-        if (!req.params.flightId) {
-                res.status(400);
-                res.send('Flight number required');
-        } else {
+	if (!req.params.flightId) {
+		res.status(400);
+		res.send('Flight number required');
+	} else {
 		// FIXME: Search service doesn't yet provide this
 		request.get(`${searchEndpoint}/seats?flight=${req.params.flightId}`,
-                        {}, handleBackendResponse(res));
-        }
+			{}, handleBackendResponse(res));
+	}
 });
 
 router.get('/flight/:flightId/seat/:row/:seatId', function(req, res) {
-        if (!req.params.flightId || !req.params.row || !req.params.seatId) {
-                res.status(400);
-                res.send('Flight number, row, and seat required');
-        } else {
-                request.get(
+	if (!req.params.flightId || !req.params.row || !req.params.seatId) {
+		res.status(400);
+		res.send('Flight number, row, and seat required');
+	} else {
+		request.get(
 			`${bookingEndpoint}/details/flights/${req.params.flightId}/rows/${req.params.row}/seats/${req.params.seatId}`,
 			{}, handleBackendResponse(res));
-        }
+	}
 });
 
 router.put('/flight/:flightId/seat/:row/:seatId/ticket', function(req, res) {
-        if (!req.params.flightId || !req.params.row || !req.params.seatId) {
-                res.status(400);
-                res.send('Flight number, row, and seat required');
-        } else {
-                let body = req.body;
+	if (!req.params.flightId || !req.params.row || !req.params.seatId) {
+		res.status(400);
+		res.send('Flight number, row, and seat required');
+	} else {
+		let body = req.body;
 		if (body.price) {
 			request.put(
 				`${bookingEndpoint}/booking/pay/flights/${req.params.flightId}/rows/${req.params.row}/seats/${req.params.seatId}`,
@@ -60,11 +60,11 @@ router.put('/flight/:flightId/seat/:row/:seatId/ticket', function(req, res) {
 });
 
 router.post('/flight/:flightId/seat/:row/:seatId/ticket', function(req, res) {
-        if (!req.params.flightId || !req.params.row || !req.params.seatId) {
-                res.status(400);
-                res.send('Flight number, row, and seat required');
-        } else {
-                let body = req.body;
+	if (!req.params.flightId || !req.params.row || !req.params.seatId) {
+		res.status(400);
+		res.send('Flight number, row, and seat required');
+	} else {
+		let body = req.body;
 		if (!body.reserver) {
 			res.status(400);
 			res.send('Reserver required');
@@ -78,10 +78,10 @@ router.post('/flight/:flightId/seat/:row/:seatId/ticket', function(req, res) {
 });
 
 router.delete('/flight/:flightId/seat/:row/:seatId/ticket', function(req, res) {
-        if (!req.params.flightId || !req.params.row || !req.params.seatId) {
-                res.status(400);
-                res.send('Flight number, row, and seat required');
-        } else {
+	if (!req.params.flightId || !req.params.row || !req.params.seatId) {
+		res.status(400);
+		res.send('Flight number, row, and seat required');
+	} else {
 		request.get(
 			`${bookingEndpoint}/booking/details/flights/${req.params.flightId}/rows/${req.params.row}/seats/${req.params.seatId}`,
 			{}, function(err, response, body) {
@@ -123,7 +123,7 @@ router.put('/booking/:bookingCode', function(req, res) {
 		res.status(400);
 		res.send('Booking code required');
 	} else {
-        let body = req.body;
+		let body = req.body;
 		if (body.price) {
 			request.put(`${bookingEndpoint}/booking/pay/bookings/${req.params.bookingCode}`,
 				{ body: {'price': body.price }}, handleBackendResponse(res));
@@ -136,8 +136,8 @@ router.put('/booking/:bookingCode', function(req, res) {
 
 router.delete('/booking/:bookingCode', function(req, res) {
 	if (!req.params.bookingCode) {
-			res.status(400);
-			res.send('Booking code required');
+		res.status(400);
+		res.send('Booking code required');
 	} else {
 		request.get(`${bookingEndpoint}/booking/details/bookings/${req.params.bookingCode}`,
 			{}, function(err, response, body) {

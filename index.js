@@ -13,4 +13,4 @@ module.exports = server;
 module.exports.stop = async function(done) {
 	await server.close();
 	done();
-}
+};

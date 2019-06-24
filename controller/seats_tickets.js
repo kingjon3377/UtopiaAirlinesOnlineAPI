@@ -50,7 +50,6 @@ router.put('/flight/:flightId/seat/:row/:seatId/ticket', function(req, res) {
                 res.status(400);
                 res.send('Flight number, row, and seat required');
         } else {
-                // TODO: Make sure to call app.use(express.json()) in index.js
                 let body = req.body;
 		if (body.price) {
 			request.put(bookingEndpoint + '/booking/pay/flights/' +
@@ -88,7 +87,6 @@ router.post('/flight/:flightId/seat/:row/:seatId/ticket', function(req, res) {
                 res.status(400);
                 res.send('Flight number, row, and seat required');
         } else {
-                // TODO: Make sure to call app.use(express.json()) in index.js
                 let body = req.body;
 		if (!body.reserver) {
 			res.status(400);
@@ -184,7 +182,6 @@ router.put('/booking/:bookingCode', function(req, res) {
 		res.status(400);
 		res.send('Booking code required');
 	} else {
-        // TODO: Make sure to call app.use(express.json()) in index.js
         let body = req.body;
 		if (body.price) {
 			request.put(bookingEndpoint + '/booking/pay/bookings/' +

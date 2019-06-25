@@ -95,7 +95,8 @@ router.delete('/flight/:flightId/seat/:row/:seatId/ticket', function(req, res) {
 						res.status(204);
 						res.send();
 					} else if (returned.price) {
-						request.delete(
+						// DELETE makes more sense, but the cancellation service uses PUT at the moment
+						request.put(
 							`${cancellationEndpoint}/cancel/ticket/flight/${req.params.flightId}/row/${req.params.row}/seat/${req.params.seatId}`,
 							{}, handleBackendResponse(res));
 					} else {

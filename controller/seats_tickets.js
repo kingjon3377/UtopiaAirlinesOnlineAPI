@@ -4,19 +4,7 @@ const router = require('express').Router();
 const searchEndpoint = process.env.SEARCH_ENDPOINT;
 const bookingEndpoint = process.env.BOOKING_ENDPOINT;
 const cancellationEndpoint = process.env.CANCELLATION_ENDPOINT;
-
-function handleBackendResponse(outgoingResponse) {
-	return (err, response, body) => {
-		if (err) {
-			outgoingResponse.status(500);
-			console.log(err);
-			outgoingResponse.send();
-		} else {
-			outgoingResponse.status(response.statusCode);
-			outgoingResponse.send(body);
-		}
-	};
-}
+const handleBackendResponse = require('../util/handle_backend_response.js');
 
 router.get('/flight/:flightId/seats', function(req, res) {
 	if (!req.params.flightId) {

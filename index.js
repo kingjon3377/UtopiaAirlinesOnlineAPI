@@ -11,7 +11,6 @@ app.use(require('./controller/seats_tickets'));
 const server = app.listen(9000);
 logger.info('Server running on port 9000');
 module.exports = server;
-module.exports.stop = async function(done) {
-	await server.close();
-	done();
+module.exports.stop = function() {
+	server.close();
 };

@@ -1,156 +1,297 @@
 'use strict';
 const request = require('request');
-const router = require('express').Router();
 const searchEndpoint = process.env.SEARCH_ENDPOINT;
 const bookingEndpoint = process.env.BOOKING_ENDPOINT;
 const cancellationEndpoint = process.env.CANCELLATION_ENDPOINT;
 const handleBackendResponse = require('../util/handle_backend_response.js');
 const logger = require('../util/logger').createLogger('ticketsController');
+const constructResponse = require ('../util/construct_response');
 
-router.get('/flight/:flightId/seats', function(req, res) {
-	if (!req.params.flightId) {
-		res.status(400);
-		res.send('Flight number required');
+function putTicket(event) {
+	if (event.queryStringParameters) {
+		logger.error('Unwanted query parameters provided. Details: ' + event);
+		return constructResponse(400, { error: 'Query parameters not yet supported' });
+	} else if (event.multiValueQueryStringParameters) {
+		logger.error('Unwanted multi-value query parameters provided. Details: ' + event);
+		return constructResponse(400, { error: 'Query parameters not yet supported' });
+	} else if (!event.pathParameters) {
+		logger.error('Path parameter must be provided to /flight/:flightId/seats. Details: ' + event);
+		return constructResponse(400, { error: 'Flight number required' });
+	} else if (!event.pathParameters.flightId || !event.pathParameters.row || !event.pathParameters.seatId) {
+		logger.error('Flight number, row, and seat path parameters must be provided to /flight/:flightId/seats. Details: ' + event);
+		return constructResponse(400, { error: 'Flight number, row, and seat required' });
+	} else if (!event.body) {
+		logger.error('Body required. Details: ' + event);
+		return constructResponse(400, { error: 'Request body required' });
 	} else {
-		request.get(`${searchEndpoint}/seats?flight=${req.params.flightId}`,
-			{}, handleBackendResponse(res, logger));
-	}
-});
-
-router.get('/flight/:flightId/seat/:row/:seatId', function(req, res) {
-	if (!req.params.flightId || !req.params.row || !req.params.seatId) {
-		res.status(400);
-		res.send('Flight number, row, and seat required');
-	} else {
-		request.get(
-			`${bookingEndpoint}/details/flights/${req.params.flightId}/rows/${req.params.row}/seats/${req.params.seatId}`,
-			{}, handleBackendResponse(res, logger));
-	}
-});
-
-router.put('/flight/:flightId/seat/:row/:seatId/ticket', function(req, res) {
-	if (!req.params.flightId || !req.params.row || !req.params.seatId) {
-		res.status(400);
-		res.send('Flight number, row, and seat required');
-	} else {
-		let body = req.body;
+		let body = JSON.parse(event.body);
+		const response = {};
 		if (body.price) {
 			request.put(
-				`${bookingEndpoint}/booking/pay/flights/${req.params.flightId}/rows/${req.params.row}/seats/${req.params.seatId}`,
+				`${bookingEndpoint}/booking/pay/flights/${event.pathParameters.flightId}/rows/${event.pathParameters.row}/seats/${event.pathParameters.seatId}`,
 				{ body: {'price': body.price }},
-				handleBackendResponse(res, logger));
+				handleBackendResponse(response, logger));
 		} else {
 			request.put(
-				`${bookingEndpoint}/booking/extend/flights/${req.params.flightId}/rows/${req.params.row}/seats/${req.params.seatId}`,
-				{}, handleBackendResponse(res, logger));
+				`${bookingEndpoint}/booking/extend/flights/${event.pathParameters.flightId}/rows/${event.pathParameters.row}/seats/${event.pathParameters.seatId}`,
+				{}, handleBackendResponse(response, logger));
 		}
+		return response;
 	}
-});
+}
 
-router.post('/flight/:flightId/seat/:row/:seatId/ticket', function(req, res) {
-	if (!req.params.flightId || !req.params.row || !req.params.seatId) {
-		res.status(400);
-		res.send('Flight number, row, and seat required');
+function postTicket(event) {
+	if (event.queryStringParameters) {
+		logger.error('Unwanted query parameters provided. Details: ' + event);
+		return constructResponse(400, { error: 'Query parameters not yet supported' });
+	} else if (event.multiValueQueryStringParameters) {
+		logger.error('Unwanted multi-value query parameters provided. Details: ' + event);
+		return constructResponse(400, { error: 'Query parameters not yet supported' });
+	} else if (!event.pathParameters) {
+		logger.error('Path parameter must be provided to /flight/:flightId/seats. Details: ' + event);
+		return constructResponse(400, { error: 'Flight number required' });
+	} else if (!event.pathParameters.flightId || !event.pathParameters.row || !event.pathParameters.seatId) {
+		logger.error('Flight number, row, and seat path parameters must be provided to /flight/:flightId/seats. Details: ' + event);
+		return constructResponse(400, { error: 'Flight number, row, and seat required' });
+	} else if (!event.body) {
+		logger.error('Body required. Details: ' + event);
+		return constructResponse(400, { error: 'Request body required' });
 	} else {
-		let body = req.body;
-		if (!body.reserver) {
-			res.status(400);
-			res.send('Reserver required');
+		let body = JSON.parse(event.body);
+		if (!body.reserver || !body.reserver.id) {
+			logger.error('Reserver required in body. Details: ' + event);
+			return constructResponse(400, { error: 'Reserver required' });
 		} else {
-			request.post(
-				`${bookingEndpoint}/booking/book/flights/${req.params.flightId}/rows/${req.params.row}/seats/${req.params.seatId}`,
+			const response = {};
+			request.put(
+				`${bookingEndpoint}/booking/pay/flights/${event.pathParameters.flightId}/rows/${event.pathParameters.row}/seats/${event.pathParameters.seatId}`,
 				{ json: { 'id': body.reserver.id } },
-				handleBackendResponse(res, logger));
+				handleBackendResponse(response, logger));
+			return response;
 		}
 	}
-});
+}
 
-router.delete('/flight/:flightId/seat/:row/:seatId/ticket', function(req, res) {
-	if (!req.params.flightId || !req.params.row || !req.params.seatId) {
-		res.status(400);
-		res.send('Flight number, row, and seat required');
+function deleteTicket(event) {
+	if (event.queryStringParameters) {
+		logger.error('Unwanted query parameters provided. Details: ' + event);
+		return constructResponse(400, { error: 'Query parameters not yet supported' });
+	} else if (event.multiValueQueryStringParameters) {
+		logger.error('Unwanted multi-value query parameters provided. Details: ' + event);
+		return constructResponse(400, { error: 'Query parameters not yet supported' });
+	} else if (!event.pathParameters) {
+		logger.error('Path parameter must be provided to /flight/:flightId/seats. Details: ' + event);
+		return constructResponse(400, { error: 'Flight number required' });
+	} else if (!event.pathParameters.flightId || !event.pathParameters.row || !event.pathParameters.seatId) {
+		logger.error('Flight number, row, and seat path parameters must be provided to /flight/:flightId/seats. Details: ' + event);
+		return constructResponse(400, { error: 'Flight number, row, and seat required' });
+	} else if (event.body) {
+		logger.error('Unwanted body. Details: ' + event);
+		return constructResponse(400, { error: 'Request body required' });
 	} else {
+		const response = {};
 		request.get(
-			`${bookingEndpoint}/booking/details/flights/${req.params.flightId}/rows/${req.params.row}/seats/${req.params.seatId}`,
-			{}, function(err, response, body) {
+			`${bookingEndpoint}/booking/details/flights/${event.pathParameters.flightId}/rows/${event.pathParameters.row}/seats/${event.pathParameters.seatId}`,
+			{}, function(err, resp, body) {
 				if (err) {
-					res.status(500);
+					response.statusCode = 500;
+					response.headers = { 'Content-Type': 'application/json' };
+					response.body = '{ "error": "Error in backend service" }';
 					logger.error(err);
-					res.send();
 				} else {
 					const returned = JSON.parse(body);
 					if (!returned.reserved) {
-						res.status(204);
-						res.send();
+						response.statusCode = 204;
+						response.body = '';
 					} else if (returned.price) {
 						// DELETE makes more sense, but the cancellation service uses PUT at the moment
 						request.put(
-							`${cancellationEndpoint}/cancel/ticket/flight/${req.params.flightId}/row/${req.params.row}/seat/${req.params.seatId}`,
-							{}, handleBackendResponse(res, logger));
+							`${cancellationEndpoint}/cancel/ticket/flight/${event.pathParameters.flightId}/row/${event.pathParameters.row}/seat/${event.pathParameters.seatId}`,
+							{}, handleBackendResponse(response, logger));
 					} else {
 						request.delete(
-							`${bookingEndpoint}/booking/book/flights/${req.params.flightId}/rows/${req.params.row}/seats/${req.params.seatId}`,
-							{}, handleBackendResponse(res, logger));
+							`${bookingEndpoint}/booking/book/flights/${event.pathParameters.flightId}/rows/${event.pathParameters.row}/seats/${event.pathParameters.seatId}`,
+							{}, handleBackendResponse(response, logger));
 					}
 				}
 			});
-	}
-});
-
-router.get('/booking/:bookingCode', function(req, res) {
-	if (!req.params.bookingCode) {
-		res.status(400);
-		res.send('Booking code required');
-	} else {
-		request.get(`${bookingEndpoint}/booking/details/bookings/${req.params.bookingCode}`, {},
-			handleBackendResponse(res, logger));
-	}
-});
-
-router.put('/booking/:bookingCode', function(req, res) {
-	if (!req.params.bookingCode) {
-		res.status(400);
-		res.send('Booking code required');
-	} else {
-		let body = req.body;
-		if (body.price) {
-			request.put(`${bookingEndpoint}/booking/pay/bookings/${req.params.bookingCode}`,
-				{ body: {'price': body.price }}, handleBackendResponse(res, logger));
-		} else {
-			request.put(`${bookingEndpoint}/booking/extend/bookings/${req.params.bookingCode}`,
-				{}, handleBackendResponse(res, logger));
+			return response;
 		}
 	}
-});
+}
 
-router.delete('/booking/:bookingCode', function(req, res) {
-	if (!req.params.bookingCode) {
-		res.status(400);
-		res.send('Booking code required');
+function getBooking(event) {
+	if (event.queryStringParameters) {
+		logger.error('Unwanted query parameters provided. Details: ' + event);
+		return constructResponse(400, { error: 'Query parameters not supported' });
+	} else if (event.multiValueQueryStringParameters) {
+		logger.error('Unwanted multi-value query parameters provided. Details: ' + event);
+		return constructResponse(400, { error: 'Query parameters not supported' });
+	} else if (!event.pathParameters) {
+		logger.error('Path parameter must be provided to /booking/. Details: ' + event);
+		return constructResponse(400, { error: 'Booking ID required' });
+	} else if (!event.pathParameters.bookingCode) {
+		logger.error('Booking code must be provided to /booking/. Details: ' + event);
+		return constructResponse(400, { error: 'Booking code required' });
 	} else {
-		request.get(`${bookingEndpoint}/booking/details/bookings/${req.params.bookingCode}`,
-			{}, function(err, response, body) {
+		const response = {};
+		request.get(`${bookingEndpoint}/booking/details/bookings/${req.params.bookingCode}`, {},
+			handleBackendResponse(response, logger));
+		return response;
+	}
+}
+
+function putBooking(event) {
+	if (event.queryStringParameters) {
+		logger.error('Unwanted query parameters provided. Details: ' + event);
+		return constructResponse(400, { error: 'Query parameters not yet supported' });
+	} else if (event.multiValueQueryStringParameters) {
+		logger.error('Unwanted multi-value query parameters provided. Details: ' + event);
+		return constructResponse(400, { error: 'Query parameters not yet supported' });
+	} else if (!event.pathParameters) {
+		logger.error('Path parameter must be provided to /booking/. Details: ' + event);
+		return constructResponse(400, { error: 'Booking code required' });
+	} else if (!event.pathParameters.bookingCode) {
+		logger.error('Path parameter must be provided to /booking/. Details: ' + event);
+		return constructResponse(400, { error: 'Flight number, row, and seat required' });
+	} else if (!event.body) {
+		logger.error('Body required. Details: ' + event);
+		return constructResponse(400, { error: 'Request body required' });
+	} else {
+		let body = JSON.parse(event.body);
+		if (body.price) {
+			request.put(`${bookingEndpoint}/booking/pay/bookings/${req.params.bookingCode}`,
+				{ body: {'price': body.price }}, handleBackendResponse(response, logger));
+		} else {
+			request.put(`${bookingEndpoint}/booking/extend/bookings/${req.params.bookingCode}`,
+				{}, handleBackendResponse(response, logger));
+		}
+	}
+}
+
+function deleteBooking(event) {
+	if (event.queryStringParameters) {
+		logger.error('Unwanted query parameters provided. Details: ' + event);
+		return constructResponse(400, { error: 'Query parameters not supported' });
+	} else if (event.multiValueQueryStringParameters) {
+		logger.error('Unwanted multi-value query parameters provided. Details: ' + event);
+		return constructResponse(400, { error: 'Query parameters not supported' });
+	} else if (!event.pathParameters) {
+		logger.error('Path parameter must be provided to /booking/. Details: ' + event);
+		return constructResponse(400, { error: 'Booking ID required' });
+	} else if (!event.pathParameters.bookingCode) {
+		logger.error('Booking code must be provided to /booking/. Details: ' + event);
+		return constructResponse(400, { error: 'Booking code required' });
+	} else {
+		const response = {};
+		request.get(`${bookingEndpoint}/booking/details/bookings/${event.pathParameters.bookingCode}`,
+			{}, function(err, resp, body) {
 				if (err) {
-					res.status(500);
+					response.statusCode = 500;
+					response.headers = { 'Content-Type': 'application/json' };
+					response.body = '{ "error": "Error in backend service" }';
 					logger.error(err);
-					res.send();
 				} else {
 					const returned = JSON.parse(body);
 					if (!returned.reserved) {
-						res.status(204);
-						res.send();
+						response.statusCode = 204;
+						response.body = '';
 					} else if (returned.price) {
 						request.delete(
-							`${cancellationEndpoint}/cancel/ticket/booking/${req.params.bookingCode}`,
-							{}, handleBackendResponse(res, logger));
+							`${cancellationEndpoint}/cancel/ticket/booking/${event.pathParameters.bookingCode}`,
+							{}, handleBackendResponse(response, logger));
 					} else {
 						request.delete(
-							`${bookingEndpoint}/booking/book/bookings/${req.params.bookingCode}`,
-							{}, handleBackendResponse(res, logger));
+							`${bookingEndpoint}/booking/book/bookings/${event.pathParameters.bookingCode}`,
+							{}, handleBackendResponse(response, logger));
 					}
 				}
 			});
+		return response;
 	}
-});
+}
+
+module.exports = {
+	allSeatsOnFlight: function(event) {
+		if (event.httpMethod === 'GET') {
+			if (event.queryStringParameters) {
+				logger.error('Unwanted query parameters provided. Details: ' + event);
+				return constructResponse(400, { error: 'Query parameters not supported' });
+			} else if (event.multiValueQueryStringParameters) {
+				logger.error('Unwanted multi-value query parameters provided. Details: ' + event);
+				return constructResponse(400, { error: 'Query parameters not supported' });
+			} else if (!event.pathParameters) {
+				logger.error('Path parameter must be provided to /flight/:flightId/seats. Details: ' + event);
+				return constructResponse(400, { error: 'Flight number required' });
+			} else if (!event.pathParameters.flightId) {
+				logger.error('Flight number path parameter must be provided to /flight/:flightId/seats. Details: ' + event);
+				return constructResponse(400, { error: 'Flight number required' });
+			} else {
+				const response = {};
+				request.get(`${searchEndpoint}/seats?flight=${event.pathParameters.flightId}`,
+					{}, handleBackendResponse(response, logger));
+				return response;
+			}
+		} else {
+			logger.error('Unsupported method for /flight/:flightNumber/seats. Details: ' + event);
+			return constructResponse(405, { error: 'Only GET method supported' });
+		}
+	},
+
+	oneSeat: function(event) {
+		if (event.httpMethod === 'GET') {
+			if (event.queryStringParameters) {
+				logger.error('Unwanted query parameters provided. Details: ' + event);
+				return constructResponse(400, { error: 'Query parameters not supported' });
+			} else if (event.multiValueQueryStringParameters) {
+				logger.error('Unwanted multi-value query parameters provided. Details: ' + event);
+				return constructResponse(400, { error: 'Query parameters not supported' });
+			} else if (!event.pathParameters) {
+				logger.error('Path parameter must be provided to /flight/:flightId/seats. Details: ' + event);
+				return constructResponse(400, { error: 'Flight number required' });
+			} else if (!event.pathParameters.flightId || !event.pathParameters.row || !event.pathParameters.seatId) {
+				logger.error('Flight number path parameter must be provided to /flight/:flightId/seats. Details: ' + event);
+				return constructResponse(400, { error: 'Flight number required' });
+			} else {
+				const response = {};
+				request.get(
+					`${bookingEndpoint}/details/flights/${event.pathParameters.flightId}/rows/${event.pathParameters.row}/seats/${event.pathParameters.seatId}`,
+					{}, handleBackendResponse(res, logger));
+				return response;
+			}
+		} else {
+			logger.error('Unsupported method for /flight/:flightNumber/seats. Details: ' + event);
+			return constructResponse(405, { error: 'Only GET method supported' });
+		}
+	},
+
+	ticketDispatcher: function(event) {
+		switch (event.httpMethd) {
+			case 'POST':
+				return postTicket(event);
+			case 'PUT':
+				return putTicket(event);
+			case 'DELETE':
+				return deleteTicket(event);
+			default:
+				logger.error('Unsupported method for /flight/:flightNumber/seat/:row/:seatId/ticket. Details: ' + event);
+				return constructResponse(405, { error: 'Only POST, PUT, and DELETE supported' });
+		}
+	},
+
+	bookingDispatcher: function(event) {
+		switch (event.httpMethod) {
+			case 'GET':
+				return getBooking(event);
+			case 'PUT':
+				return putBooking(event);
+			case 'DELETE':
+				return deleteBooking(event);
+			default:
+				logger.error('Unsupported method for /booking/:bookingCode. Details: ' + event);
+				return constructResponse(405, { error: 'Only GET, PUT, and DELETE supported' });
+		}
+	}
+}
 
 module.exports = router;

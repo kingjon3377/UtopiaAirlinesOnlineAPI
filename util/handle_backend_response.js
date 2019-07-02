@@ -1,13 +1,14 @@
 'use strict';
 module.exports = function handleBackendResponse(outgoingResponse, logger) {
 	return (err, response, body) => {
+		outgoingResponse.headers = { 'Content-Type': 'application/json' };
 		if (err) {
-			outgoingResponse.status(500);
+			outgoingResponse.statusCode = 500;
 			logger.error(err);
-			outgoingResponse.send();
+			outgoingResponse.body = '{}';
 		} else {
-			outgoingResponse.status(response.statusCode);
-			outgoingResponse.send(body);
+			outgoingResponse.statusCode = response.statusCode;
+			outgoingResponse.body = JSON.stringify(body);
 		}
 	};
 };

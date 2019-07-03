@@ -1,12 +1,11 @@
 'use strict';
-const request = require('request');
+const got = require('got');
 const searchEndpoint = process.env.SEARCH_ENDPOINT;
-const handleBackendResponse = require('../util/handle_backend_response.js');
 const logger = require('../util/logger').createLogger('flightsController');
 const constructResponse = require ('../util/construct_response');
 
 module.exports = {
-	allFlights: function(event) {
+	allFlights: async function(event) {
 		if (event.httpMethod === 'GET') {
 			if (event.queryStringParameters) {
 				logger.error('Unwanted query parameters provided. Details: ' + event);
@@ -18,10 +17,8 @@ module.exports = {
 				logger.error('Unwanted path parameters provided to /flights. Details: ' + event);
 				return constructResponse(400, { error: 'Path parameters not supported' });
 			} else {
-				const response = {};
-				request.get(`${searchEndpoint}/flights`, {},
-					handleBackendResponse(response, logger));
-				return response;
+				const resp = await got(`${searchEndpoint}/flights`);
+				return constructResponse(resp.statusCode, resp.body);
 			}
 		} else {
 			logger.error('Unsupported method for /airports. Details: ' + event);
@@ -29,7 +26,7 @@ module.exports = {
 		}
 	},
 
-	oneFlight: function(event) {
+	oneFlight: async function(event) {
 		if (event.httpMethod === 'GET') {
 			if (event.queryStringParameters) {
 				logger.error('Unwanted query parameters provided. Details: ' + event);
@@ -44,10 +41,8 @@ module.exports = {
 				logger.error('Flight number path parameter must be provided to /flight/. Details: ' + event);
 				return constructResponse(400, { error: 'Flight number required' });
 			} else {
-				const response = {};
-				request.get(`${searchEndpoint}/flightDetails?flight=${event.pathParameters.flightId}`, {},
-					handleBackendResponse(response, logger));
-				return response;
+				const resp = await got(`${searchEndpoint}/flightDetails?flight=${event.pathParameters.flightId}`);
+				return constructResponse(resp.statusCode, resp.body);
 			}
 		} else {
 			logger.error('Unsupported method for /flight/:flightNumber. Details: ' + event);

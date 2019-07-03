@@ -1,13 +1,12 @@
 'use strict';
-const request = require('request');
+const got = require('got');
 const searchEndpoint = process.env.SEARCH_ENDPOINT;
 const bookingEndpoint = process.env.BOOKING_ENDPOINT;
 const cancellationEndpoint = process.env.CANCELLATION_ENDPOINT;
-const handleBackendResponse = require('../util/handle_backend_response.js');
 const logger = require('../util/logger').createLogger('ticketsController');
 const constructResponse = require ('../util/construct_response');
 
-function putTicket(event) {
+async function putTicket(event) {
 	if (event.queryStringParameters) {
 		logger.error('Unwanted query parameters provided. Details: ' + event);
 		return constructResponse(400, { error: 'Query parameters not yet supported' });
@@ -25,22 +24,20 @@ function putTicket(event) {
 		return constructResponse(400, { error: 'Request body required' });
 	} else {
 		let body = JSON.parse(event.body);
-		const response = {};
 		if (body.price) {
-			request.put(
+			const resp = await got.put(
 				`${bookingEndpoint}/booking/pay/flights/${event.pathParameters.flightId}/rows/${event.pathParameters.row}/seats/${event.pathParameters.seatId}`,
-				{ body: {'price': body.price }},
-				handleBackendResponse(response, logger));
+				{ body: {'price': body.price }});
+			return constructResponse(resp.statusCode, resp.body);
 		} else {
-			request.put(
-				`${bookingEndpoint}/booking/extend/flights/${event.pathParameters.flightId}/rows/${event.pathParameters.row}/seats/${event.pathParameters.seatId}`,
-				{}, handleBackendResponse(response, logger));
+			const resp = await got.put(
+				`${bookingEndpoint}/booking/extend/flights/${event.pathParameters.flightId}/rows/${event.pathParameters.row}/seats/${event.pathParameters.seatId}`);
+			return constructResponse(resp.statusCode, resp.body);
 		}
-		return response;
 	}
 }
 
-function postTicket(event) {
+async function postTicket(event) {
 	if (event.queryStringParameters) {
 		logger.error('Unwanted query parameters provided. Details: ' + event);
 		return constructResponse(400, { error: 'Query parameters not yet supported' });
@@ -62,12 +59,11 @@ function postTicket(event) {
 			logger.error('Reserver required in body. Details: ' + event);
 			return constructResponse(400, { error: 'Reserver required' });
 		} else {
-			const response = {};
-			request.put(
+			const resp = await got.put(
+				// FIXME: Should call "book", not "pay"
 				`${bookingEndpoint}/booking/pay/flights/${event.pathParameters.flightId}/rows/${event.pathParameters.row}/seats/${event.pathParameters.seatId}`,
-				{ json: { 'id': body.reserver.id } },
-				handleBackendResponse(response, logger));
-			return response;
+				{ body: `{ 'id': ${body.reserver.id} }` });
+			return constructResponse(resp.statusCode, resp.body);
 		}
 	}
 }
@@ -89,37 +85,32 @@ function deleteTicket(event) {
 		logger.error('Unwanted body. Details: ' + event);
 		return constructResponse(400, { error: 'Request body required' });
 	} else {
-		const response = {};
-		request.get(
-			`${bookingEndpoint}/booking/details/flights/${event.pathParameters.flightId}/rows/${event.pathParameters.row}/seats/${event.pathParameters.seatId}`,
-			{}, function(err, resp, body) {
-				if (err) {
-					response.statusCode = 500;
-					response.headers = { 'Content-Type': 'application/json' };
-					response.body = '{ "error": "Error in backend service" }';
-					logger.error(err);
-				} else {
-					const returned = JSON.parse(body);
-					if (!returned.reserved) {
-						response.statusCode = 204;
-						response.body = '';
-					} else if (returned.price) {
-						// DELETE makes more sense, but the cancellation service uses PUT at the moment
-						request.put(
-							`${cancellationEndpoint}/cancel/ticket/flight/${event.pathParameters.flightId}/row/${event.pathParameters.row}/seat/${event.pathParameters.seatId}`,
-							{}, handleBackendResponse(response, logger));
-					} else {
-						request.delete(
-							`${bookingEndpoint}/booking/book/flights/${event.pathParameters.flightId}/rows/${event.pathParameters.row}/seats/${event.pathParameters.seatId}`,
-							{}, handleBackendResponse(response, logger));
-					}
-				}
-			});
+		let response = {};
+		const firstResult = got(
+			`${bookingEndpoint}/booking/details/flights/${event.pathParameters.flightId}/rows/${event.pathParameters.row}/seats/${event.pathParameters.seatId}`);
+		firstResult.then(async (result) => {
+			const body = result.body;
+			if (!body.reserved) {
+				response = constructResponse(204, '');
+			} else if (body.price) {
+				// DELETE makes more sense, but the cancellation service uses PUT at the moment
+				const secondResult = await got.put(
+					`${cancellationEndpoint}/cancel/ticket/flight/${event.pathParameters.flightId}/row/${event.pathParameters.row}/seat/${event.pathParameters.seatId}`);
+				response = constructResponse(secondResult.statusCode, secondResult.body);
+			} else {
+				const secondResult = await got.delete(
+					`${bookingEndpoint}/booking/book/flights/${event.pathParameters.flightId}/rows/${event.pathParameters.row}/seats/${event.pathParameters.seatId}`);
+				response = constructResponse(secondResult.statusCode, secondResult.body);
+			}
+		}, (err) => {
+			response = constructResponse(500, { error: 'Error in backend service' });
+			logger.error(err);
+		});
 		return response;
 	}
 }
 
-function getBooking(event) {
+async function getBooking(event) {
 	if (event.queryStringParameters) {
 		logger.error('Unwanted query parameters provided. Details: ' + event);
 		return constructResponse(400, { error: 'Query parameters not supported' });
@@ -133,14 +124,12 @@ function getBooking(event) {
 		logger.error('Booking code must be provided to /booking/. Details: ' + event);
 		return constructResponse(400, { error: 'Booking code required' });
 	} else {
-		const response = {};
-		request.get(`${bookingEndpoint}/booking/details/bookings/${event.pathParameters.bookingCode}`, {},
-			handleBackendResponse(response, logger));
-		return response;
+		const resp = await got(`${bookingEndpoint}/booking/details/bookings/${event.pathParameters.bookingCode}`);
+		return constructResponse(resp.statusCode, resp.body);
 	}
 }
 
-function putBooking(event) {
+async function putBooking(event) {
 	if (event.queryStringParameters) {
 		logger.error('Unwanted query parameters provided. Details: ' + event);
 		return constructResponse(400, { error: 'Query parameters not yet supported' });
@@ -158,15 +147,14 @@ function putBooking(event) {
 		return constructResponse(400, { error: 'Request body required' });
 	} else {
 		let body = JSON.parse(event.body);
-		const response = {};
 		if (body.price) {
-			request.put(`${bookingEndpoint}/booking/pay/bookings/${event.pathParameters.bookingCode}`,
-				{ body: {'price': body.price }}, handleBackendResponse(response, logger));
+			const resp = await got.put(`${bookingEndpoint}/booking/details/bookings/${event.pathParameters.bookingCode}`,
+				{ body: `{'price': ${body.price} }` });
+			return constructResponse(resp.statusCode, resp.body);
 		} else {
-			request.put(`${bookingEndpoint}/booking/extend/bookings/${event.pathParameters.bookingCode}`,
-				{}, handleBackendResponse(response, logger));
+			const resp = await got.put(`${bookingEndpoint}/booking/extend/bookings/${event.pathParameters.bookingCode}`);
+			return constructResponse(resp.statusCode, resp.body);
 		}
-		return response;
 	}
 }
 
@@ -184,36 +172,32 @@ function deleteBooking(event) {
 		logger.error('Booking code must be provided to /booking/. Details: ' + event);
 		return constructResponse(400, { error: 'Booking code required' });
 	} else {
-		const response = {};
-		request.get(`${bookingEndpoint}/booking/details/bookings/${event.pathParameters.bookingCode}`,
-			{}, function(err, resp, body) {
-				if (err) {
-					response.statusCode = 500;
-					response.headers = { 'Content-Type': 'application/json' };
-					response.body = '{ "error": "Error in backend service" }';
-					logger.error(err);
-				} else {
-					const returned = JSON.parse(body);
-					if (!returned.reserved) {
-						response.statusCode = 204;
-						response.body = '';
-					} else if (returned.price) {
-						request.delete(
-							`${cancellationEndpoint}/cancel/ticket/booking/${event.pathParameters.bookingCode}`,
-							{}, handleBackendResponse(response, logger));
-					} else {
-						request.delete(
-							`${bookingEndpoint}/booking/book/bookings/${event.pathParameters.bookingCode}`,
-							{}, handleBackendResponse(response, logger));
-					}
-				}
-			});
+		let response = {};
+		const firstResult = got(`${bookingEndpoint}/booking/details/bookings/${event.pathParameters.bookingCode}`);
+		firstResult.then(async (result) => {
+			const body = result.body;
+			if (!body.reserved) {
+				response = constructResponse(204, '');
+			} else if (body.price) {
+				// DELETE makes more sense, but the cancellation service uses PUT at the moment
+				const secondResult = await got.put(
+					`${cancellationEndpoint}/cancel/ticket/booking/${event.pathParameters.bookingCode}`);
+				response = constructResponse(secondResult.statusCode, secondResult.body);
+			} else {
+				const secondResult = await got.delete(
+					`${bookingEndpoint}/booking/book/bookings/${event.pathParameters.bookingCode}`);
+				response = constructResponse(secondResult.statusCode, secondResult.body);
+			}
+		}, (err) => {
+			response = constructResponse(500, { error: 'Error in backend service' });
+			logger.error(err);
+		});
 		return response;
 	}
 }
 
 module.exports = {
-	allSeatsOnFlight: function(event) {
+	allSeatsOnFlight: async function(event) {
 		if (event.httpMethod === 'GET') {
 			if (event.queryStringParameters) {
 				logger.error('Unwanted query parameters provided. Details: ' + event);
@@ -228,10 +212,8 @@ module.exports = {
 				logger.error('Flight number path parameter must be provided to /flight/:flightId/seats. Details: ' + event);
 				return constructResponse(400, { error: 'Flight number required' });
 			} else {
-				const response = {};
-				request.get(`${searchEndpoint}/seats?flight=${event.pathParameters.flightId}`,
-					{}, handleBackendResponse(response, logger));
-				return response;
+				const resp = await got(`${searchEndpoint}/seats?flight=${event.pathParameters.flightId}`);
+				return constructResponse(resp.statusCode, resp.body);
 			}
 		} else {
 			logger.error('Unsupported method for /flight/:flightNumber/seats. Details: ' + event);
@@ -239,7 +221,7 @@ module.exports = {
 		}
 	},
 
-	oneSeat: function(event) {
+	oneSeat: async function(event) {
 		if (event.httpMethod === 'GET') {
 			if (event.queryStringParameters) {
 				logger.error('Unwanted query parameters provided. Details: ' + event);
@@ -254,11 +236,9 @@ module.exports = {
 				logger.error('Flight number path parameter must be provided to /flight/:flightId/seats. Details: ' + event);
 				return constructResponse(400, { error: 'Flight number required' });
 			} else {
-				const response = {};
-				request.get(
-					`${bookingEndpoint}/details/flights/${event.pathParameters.flightId}/rows/${event.pathParameters.row}/seats/${event.pathParameters.seatId}`,
-					{}, handleBackendResponse(response, logger));
-				return response;
+				const resp = await got(
+					`${bookingEndpoint}/details/flights/${event.pathParameters.flightId}/rows/${event.pathParameters.row}/seats/${event.pathParameters.seatId}`);
+				return constructResponse(resp.statusCode, resp.body);
 			}
 		} else {
 			logger.error('Unsupported method for /flight/:flightNumber/seats. Details: ' + event);

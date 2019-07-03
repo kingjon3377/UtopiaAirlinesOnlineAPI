@@ -1,12 +1,11 @@
 'use strict';
-const request = require('request');
+const got = require('got');
 const searchEndpoint = process.env.SEARCH_ENDPOINT;
-const handleBackendResponse = require('../util/handle_backend_response.js');
 const logger = require('../util/logger').createLogger('airportsController');
 const constructResponse = require ('../util/construct_response');
 
 module.exports = {
-	allAirports: function(event) {
+	allAirports: async function(event) {
 		if (event.httpMethod === 'GET') {
 			if (event.queryStringParameters) {
 				logger.error('Unwanted query parameters provided. Details: ' + event);
@@ -18,10 +17,8 @@ module.exports = {
 				logger.error('Unwanted path parameters provided to /airports. Details: ' + event);
 				return constructResponse(400, { error: 'Path parameters not supported' });
 			} else {
-				const response = {};
-				request.get(`${searchEndpoint}/airports`, {},
-					handleBackendResponse(response, logger));
-				return response;
+				const resp = await got(`${searchEndpoint}/airports`);
+				return constructResponse(resp.statusCode, resp.body);
 			}
 		} else {
 			logger.error('Unsupported method for /airports. Details: ' + event);
@@ -29,7 +26,7 @@ module.exports = {
 		}
 	},
 
-	oneAirport: function(event) {
+	oneAirport: async function(event) {
 		if (event.httpMethod === 'GET') {
 			if (event.queryStringParameters) {
 				logger.error('Unwanted query parameters provided. Details: ' + event);
@@ -44,10 +41,8 @@ module.exports = {
 				logger.error('Code path parameter must be provided to /airport/. Details: ' + event);
 				return constructResponse(400, { error: 'Airport code required' });
 			} else {
-				const response = {};
-				request.get(`${searchEndpoint}/airportDetails?airport=${event.pathParameters.code}`,
-					{}, handleBackendResponse(response, logger));
-				return response;
+				const resp = await got(`${searchEndpoint}/airportDetails?airport=${event.pathParameters.code}`);
+				return constructResponse(resp.statusCode, resp.body);
 			}
 		} else {
 			logger.error('Unsupported method for /airport/:code. Details: ' + event);

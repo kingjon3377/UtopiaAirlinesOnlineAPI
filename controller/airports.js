@@ -54,4 +54,4 @@ module.exports = {
 			return constructResponse(405, { error: 'Only GET method supported' });
 		}
 	}
-}
+};

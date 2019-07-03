@@ -46,7 +46,7 @@ module.exports = {
 			} else {
 				const response = {};
 				request.get(`${searchEndpoint}/flightDetails?flight=${event.pathParameters.flightId}`, {},
-					handleBackendResponse(res, logger));
+					handleBackendResponse(response, logger));
 				return response;
 			}
 		} else {
@@ -54,4 +54,4 @@ module.exports = {
 			return constructResponse(405, { error: 'Only GET method supported' });
 		}
 	}
-}
+};

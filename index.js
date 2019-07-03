@@ -34,4 +34,4 @@ exports.handler = async (event) => {
 			logger.error('Unhandled route! Event details: ' + JSON.stringify(event));
 			return null;
 	}
-}
+};

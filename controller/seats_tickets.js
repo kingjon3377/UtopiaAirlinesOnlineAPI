@@ -116,7 +116,6 @@ function deleteTicket(event) {
 				}
 			});
 			return response;
-		}
 	}
 }
 
@@ -258,7 +257,7 @@ module.exports = {
 				const response = {};
 				request.get(
 					`${bookingEndpoint}/details/flights/${event.pathParameters.flightId}/rows/${event.pathParameters.row}/seats/${event.pathParameters.seatId}`,
-					{}, handleBackendResponse(res, logger));
+					{}, handleBackendResponse(response, logger));
 				return response;
 			}
 		} else {
@@ -294,4 +293,4 @@ module.exports = {
 				return constructResponse(405, { error: 'Only GET, PUT, and DELETE supported' });
 		}
 	}
-}
+};

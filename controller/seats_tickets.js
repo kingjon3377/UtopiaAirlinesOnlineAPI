@@ -115,7 +115,7 @@ function deleteTicket(event) {
 					}
 				}
 			});
-			return response;
+		return response;
 	}
 }
 
@@ -268,29 +268,29 @@ module.exports = {
 
 	ticketDispatcher: function(event) {
 		switch (event.httpMethd) {
-			case 'POST':
-				return postTicket(event);
-			case 'PUT':
-				return putTicket(event);
-			case 'DELETE':
-				return deleteTicket(event);
-			default:
-				logger.error('Unsupported method for /flight/:flightNumber/seat/:row/:seatId/ticket. Details: ' + event);
-				return constructResponse(405, { error: 'Only POST, PUT, and DELETE supported' });
+		case 'POST':
+			return postTicket(event);
+		case 'PUT':
+			return putTicket(event);
+		case 'DELETE':
+			return deleteTicket(event);
+		default:
+			logger.error('Unsupported method for /flight/:flightNumber/seat/:row/:seatId/ticket. Details: ' + event);
+			return constructResponse(405, { error: 'Only POST, PUT, and DELETE supported' });
 		}
 	},
 
 	bookingDispatcher: function(event) {
 		switch (event.httpMethod) {
-			case 'GET':
-				return getBooking(event);
-			case 'PUT':
-				return putBooking(event);
-			case 'DELETE':
-				return deleteBooking(event);
-			default:
-				logger.error('Unsupported method for /booking/:bookingCode. Details: ' + event);
-				return constructResponse(405, { error: 'Only GET, PUT, and DELETE supported' });
+		case 'GET':
+			return getBooking(event);
+		case 'PUT':
+			return putBooking(event);
+		case 'DELETE':
+			return deleteBooking(event);
+		default:
+			logger.error('Unsupported method for /booking/:bookingCode. Details: ' + event);
+			return constructResponse(405, { error: 'Only GET, PUT, and DELETE supported' });
 		}
 	}
 };

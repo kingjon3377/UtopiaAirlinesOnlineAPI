@@ -14,24 +14,24 @@ exports.handler = async (event) => {
 		return null;
 	}
 	switch (event.resource) {
-		case '/airports':
-			return airportController.allAirports(event);
-		case '/airport/{code}':
-			return airportController.oneAirport(event);
-		case '/flights':
-			return flightController.allFlights(event);
-		case '/flight/{flightId}':
-			return flightController.oneFlight(event);
-		case '/flight/{flightId}/seats':
-			return ticketController.allSeatsOnFlight(event);
-		case '/flight/{flightId}/seat/{row}/{seatId}':
-			return ticketController.oneSeat(event);
-		case '/flight/{flightId}/seat/{row}/{seatId}/ticket':
-			return ticketController.ticketDispatcher(event);
-		case '/booking/{bookingCode}':
-			return ticketController.bookingDispatcher(event);
-		default:
-			logger.error('Unhandled route! Event details: ' + JSON.stringify(event));
-			return null;
+	case '/airports':
+		return airportController.allAirports(event);
+	case '/airport/{code}':
+		return airportController.oneAirport(event);
+	case '/flights':
+		return flightController.allFlights(event);
+	case '/flight/{flightId}':
+		return flightController.oneFlight(event);
+	case '/flight/{flightId}/seats':
+		return ticketController.allSeatsOnFlight(event);
+	case '/flight/{flightId}/seat/{row}/{seatId}':
+		return ticketController.oneSeat(event);
+	case '/flight/{flightId}/seat/{row}/{seatId}/ticket':
+		return ticketController.ticketDispatcher(event);
+	case '/booking/{bookingCode}':
+		return ticketController.bookingDispatcher(event);
+	default:
+		logger.error('Unhandled route! Event details: ' + JSON.stringify(event));
+		return null;
 	}
 };

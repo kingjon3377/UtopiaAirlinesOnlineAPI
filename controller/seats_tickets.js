@@ -135,7 +135,7 @@ function getBooking(event) {
 		return constructResponse(400, { error: 'Booking code required' });
 	} else {
 		const response = {};
-		request.get(`${bookingEndpoint}/booking/details/bookings/${req.params.bookingCode}`, {},
+		request.get(`${bookingEndpoint}/booking/details/bookings/${event.pathParameters.bookingCode}`, {},
 			handleBackendResponse(response, logger));
 		return response;
 	}
@@ -160,10 +160,10 @@ function putBooking(event) {
 	} else {
 		let body = JSON.parse(event.body);
 		if (body.price) {
-			request.put(`${bookingEndpoint}/booking/pay/bookings/${req.params.bookingCode}`,
+			request.put(`${bookingEndpoint}/booking/pay/bookings/${event.pathParameters.bookingCode}`,
 				{ body: {'price': body.price }}, handleBackendResponse(response, logger));
 		} else {
-			request.put(`${bookingEndpoint}/booking/extend/bookings/${req.params.bookingCode}`,
+			request.put(`${bookingEndpoint}/booking/extend/bookings/${event.pathParameters.bookingCode}`,
 				{}, handleBackendResponse(response, logger));
 		}
 	}

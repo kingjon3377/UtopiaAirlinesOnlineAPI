@@ -159,6 +159,7 @@ function putBooking(event) {
 		return constructResponse(400, { error: 'Request body required' });
 	} else {
 		let body = JSON.parse(event.body);
+		const response = {};
 		if (body.price) {
 			request.put(`${bookingEndpoint}/booking/pay/bookings/${event.pathParameters.bookingCode}`,
 				{ body: {'price': body.price }}, handleBackendResponse(response, logger));
@@ -166,6 +167,7 @@ function putBooking(event) {
 			request.put(`${bookingEndpoint}/booking/extend/bookings/${event.pathParameters.bookingCode}`,
 				{}, handleBackendResponse(response, logger));
 		}
+		return response;
 	}
 }
 

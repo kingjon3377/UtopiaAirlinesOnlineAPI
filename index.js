@@ -10,7 +10,7 @@ exports.handler = async (event) => {
 	if (!event) {
 		logger.error('Null event');
 		return null;
-	} else (!event.resource) {
+	} else if (!event.resource) {
 		logger.error('Event with null resource. Full details: ' + JSON.stringify(event));
 		return null;
 	}

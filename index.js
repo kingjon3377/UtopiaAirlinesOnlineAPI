@@ -1,7 +1,6 @@
 const dotenv = require('dotenv');
 dotenv.config();
 const logger = require('./util/logger').createLogger('main');
-const pathToRegexp = require('path-to-regexp');
 const airportController = require('./controller/airports');
 const flightController = require('./controller/flights');
 const ticketController = require('./controller/seats_tickets');

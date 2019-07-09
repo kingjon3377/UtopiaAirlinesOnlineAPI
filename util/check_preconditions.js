@@ -1,8 +1,11 @@
 const logger = require('../util/logger').createLogger('airportsController');
 const constructResponse = require ('../util/construct_response');
 
-module.exports = function(event, pathParameters, body, route) {
-	if (event.queryStringParameters) {
+module.exports = function(event, pathParameters, body, route, method, methodsForResponse) {
+	if (event.httpMethod !== method) {
+		logger.error(`Unsupported method for ${route}. Details: ${event}`);
+		return constructResponse(405, { error: `Only ${methodsForResponse} supported` });
+	} else if (event.queryStringParameters) {
 		logger.error('Unwanted query parameters provided. Details: ' + event);
 		return constructResponse(400, { error: 'Query parameters not yet supported' });
 	} else if (event.multiValueQueryStringParameters) {

@@ -8,7 +8,7 @@ const constructResponse = require ('../util/construct_response');
 const checkPreconditions = require('../util/check_preconditions');
 
 async function putTicket(event) {
-	const errResp = checkPreconditions(event, ['flightId', 'row', 'seatId'], true, '/flight/:flightNumber/ticket');
+	const errResp = checkPreconditions(event, ['flightId', 'row', 'seatId'], true, '/flight/:flightNumber/ticket', 'PUT', 'POST, PUT, and DELETE');
 	if (errResp) {
 		return errResp;
 	} else {
@@ -27,7 +27,7 @@ async function putTicket(event) {
 }
 
 async function postTicket(event) {
-	const errResp = checkPreconditions(event, ['flightId', 'row', 'seatId'], true, '/flight/:flightNumber/ticket');
+	const errResp = checkPreconditions(event, ['flightId', 'row', 'seatId'], true, '/flight/:flightNumber/ticket', 'POST', 'POST, PUT, and DELETE');
 	if (errResp) {
 		return errResp;
 	} else {
@@ -46,7 +46,7 @@ async function postTicket(event) {
 }
 
 function deleteTicket(event) {
-	const errResp = checkPreconditions(event, ['flightId', 'row', 'seatId'], false, '/flight/:flightNumber/ticket');
+	const errResp = checkPreconditions(event, ['flightId', 'row', 'seatId'], false, '/flight/:flightNumber/ticket', 'DELETE', 'POST, PUT, and DELETE');
 	if (errResp) {
 		return errResp;
 	} else {
@@ -76,7 +76,7 @@ function deleteTicket(event) {
 }
 
 async function getBooking(event) {
-	const errResp = checkPreconditions(event, ['bookingCode'], false, '/booking/:bookingCode');
+	const errResp = checkPreconditions(event, ['bookingCode'], false, '/booking/:bookingCode', 'GET', 'GET, PUT, and DELETE');
 	if (errResp) {
 		return errResp;
 	} else {
@@ -86,7 +86,7 @@ async function getBooking(event) {
 }
 
 async function putBooking(event) {
-	const errResp = checkPreconditions(event, ['bookingCode'], true, '/booking/:bookingCode');
+	const errResp = checkPreconditions(event, ['bookingCode'], true, '/booking/:bookingCode', 'PUT', 'GET, PUT, and DELETE');
 	if (errResp) {
 		return errResp;
 	} else {
@@ -103,7 +103,7 @@ async function putBooking(event) {
 }
 
 function deleteBooking(event) {
-	const errResp = checkPreconditions(event, ['bookingCode'], false, '/booking/:bookingCode');
+	const errResp = checkPreconditions(event, ['bookingCode'], false, '/booking/:bookingCode', 'DELETE', 'GET, PUT, and DELETE');
 	if (errResp) {
 		return errResp;
 	} else {
@@ -133,33 +133,23 @@ function deleteBooking(event) {
 
 module.exports = {
 	allSeatsOnFlight: async function(event) {
-		if (event.httpMethod === 'GET') {
-			const errResp = checkPreconditions(event, ['flightId'], false, '/flight/:flightNumber/seats');
-			if (errResp) {
-				return errResp;
-			} else {
-				const resp = await got(`${searchEndpoint}/seats?flight=${event.pathParameters.flightId}`);
-				return constructResponse(resp.statusCode, resp.body);
-			}
+		const errResp = checkPreconditions(event, ['flightId'], false, '/flight/:flightNumber/seats', 'GET', 'GET');
+		if (errResp) {
+			return errResp;
 		} else {
-			logger.error('Unsupported method for /flight/:flightNumber/seats. Details: ' + event);
-			return constructResponse(405, { error: 'Only GET method supported' });
+			const resp = await got(`${searchEndpoint}/seats?flight=${event.pathParameters.flightId}`);
+			return constructResponse(resp.statusCode, resp.body);
 		}
 	},
 
 	oneSeat: async function(event) {
-		if (event.httpMethod === 'GET') {
-			const errResp = checkPreconditions(event, ['flightId', 'row', 'seatId'], false, '/flight/:flightNumber/seat');
-			if (errResp) {
-				return errResp;
-			} else {
-				const resp = await got(
-					`${bookingEndpoint}/details/flights/${event.pathParameters.flightId}/rows/${event.pathParameters.row}/seats/${event.pathParameters.seatId}`);
-				return constructResponse(resp.statusCode, resp.body);
-			}
+		const errResp = checkPreconditions(event, ['flightId', 'row', 'seatId'], false, '/flight/:flightNumber/seat', 'GET', 'GET');
+		if (errResp) {
+			return errResp;
 		} else {
-			logger.error('Unsupported method for /flight/:flightNumber/seats. Details: ' + event);
-			return constructResponse(405, { error: 'Only GET method supported' });
+			const resp = await got(
+				`${bookingEndpoint}/details/flights/${event.pathParameters.flightId}/rows/${event.pathParameters.row}/seats/${event.pathParameters.seatId}`);
+			return constructResponse(resp.statusCode, resp.body);
 		}
 	},
 

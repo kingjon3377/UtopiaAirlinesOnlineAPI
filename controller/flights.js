@@ -7,32 +7,22 @@ const checkPreconditions = require('../util/check_preconditions');
 
 module.exports = {
 	allFlights: async function(event) {
-		if (event.httpMethod === 'GET') {
-			const errResp = checkPreconditions(event, false, false, '/flights');
-			if (errResp) {
-				return errResp;
-			} else {
-				const resp = await got(`${searchEndpoint}/flights`);
-				return constructResponse(resp.statusCode, resp.body);
-			}
+		const errResp = checkPreconditions(event, false, false, '/flights', 'GET', 'GET');
+		if (errResp) {
+			return errResp;
 		} else {
-			logger.error('Unsupported method for /airports. Details: ' + event);
-			return constructResponse(405, { error: 'Only GET supported for /flights' });
+			const resp = await got(`${searchEndpoint}/flights`);
+			return constructResponse(resp.statusCode, resp.body);
 		}
 	},
 
 	oneFlight: async function(event) {
-		if (event.httpMethod === 'GET') {
-			const errResp = checkPreconditions(event, ['flightId'], false, '/flights');
-			if (errResp) {
-				return errResp;
-			} else {
-				const resp = await got(`${searchEndpoint}/flightDetails?flight=${event.pathParameters.flightId}`);
-				return constructResponse(resp.statusCode, resp.body);
-			}
+		const errResp = checkPreconditions(event, ['flightId'], false, '/flights', 'GET', 'GET');
+		if (errResp) {
+			return errResp;
 		} else {
-			logger.error('Unsupported method for /flight/:flightNumber. Details: ' + event);
-			return constructResponse(405, { error: 'Only GET method supported' });
+			const resp = await got(`${searchEndpoint}/flightDetails?flight=${event.pathParameters.flightId}`);
+			return constructResponse(resp.statusCode, resp.body);
 		}
 	}
 };

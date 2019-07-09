@@ -5,23 +5,12 @@ const bookingEndpoint = process.env.BOOKING_ENDPOINT;
 const cancellationEndpoint = process.env.CANCELLATION_ENDPOINT;
 const logger = require('../util/logger').createLogger('ticketsController');
 const constructResponse = require ('../util/construct_response');
+const checkPreconditions = require('../util/check_preconditions');
 
 async function putTicket(event) {
-	if (event.queryStringParameters) {
-		logger.error('Unwanted query parameters provided. Details: ' + event);
-		return constructResponse(400, { error: 'Query parameters not yet supported' });
-	} else if (event.multiValueQueryStringParameters) {
-		logger.error('Unwanted multi-value query parameters provided. Details: ' + event);
-		return constructResponse(400, { error: 'Query parameters not yet supported' });
-	} else if (!event.pathParameters) {
-		logger.error('Path parameter must be provided to /flight/:flightId/seats. Details: ' + event);
-		return constructResponse(400, { error: 'Flight number required' });
-	} else if (!event.pathParameters.flightId || !event.pathParameters.row || !event.pathParameters.seatId) {
-		logger.error('Flight number, row, and seat path parameters must be provided to /flight/:flightId/seats. Details: ' + event);
-		return constructResponse(400, { error: 'Flight number, row, and seat required' });
-	} else if (!event.body) {
-		logger.error('Body required. Details: ' + event);
-		return constructResponse(400, { error: 'Request body required' });
+	const errResp = checkPreconditions(event, ['flightId', 'row', 'seatId'], true, '/flight/:flightNumber/ticket');
+	if (errResp) {
+		return errResp;
 	} else {
 		let body = JSON.parse(event.body);
 		if (body.price) {
@@ -38,21 +27,9 @@ async function putTicket(event) {
 }
 
 async function postTicket(event) {
-	if (event.queryStringParameters) {
-		logger.error('Unwanted query parameters provided. Details: ' + event);
-		return constructResponse(400, { error: 'Query parameters not yet supported' });
-	} else if (event.multiValueQueryStringParameters) {
-		logger.error('Unwanted multi-value query parameters provided. Details: ' + event);
-		return constructResponse(400, { error: 'Query parameters not yet supported' });
-	} else if (!event.pathParameters) {
-		logger.error('Path parameter must be provided to /flight/:flightId/seats. Details: ' + event);
-		return constructResponse(400, { error: 'Flight number required' });
-	} else if (!event.pathParameters.flightId || !event.pathParameters.row || !event.pathParameters.seatId) {
-		logger.error('Flight number, row, and seat path parameters must be provided to /flight/:flightId/seats. Details: ' + event);
-		return constructResponse(400, { error: 'Flight number, row, and seat required' });
-	} else if (!event.body) {
-		logger.error('Body required. Details: ' + event);
-		return constructResponse(400, { error: 'Request body required' });
+	const errResp = checkPreconditions(event, ['flightId', 'row', 'seatId'], true, '/flight/:flightNumber/ticket');
+	if (errResp) {
+		return errResp;
 	} else {
 		let body = JSON.parse(event.body);
 		if (!body.reserver || !body.reserver.id) {
@@ -69,21 +46,9 @@ async function postTicket(event) {
 }
 
 function deleteTicket(event) {
-	if (event.queryStringParameters) {
-		logger.error('Unwanted query parameters provided. Details: ' + event);
-		return constructResponse(400, { error: 'Query parameters not yet supported' });
-	} else if (event.multiValueQueryStringParameters) {
-		logger.error('Unwanted multi-value query parameters provided. Details: ' + event);
-		return constructResponse(400, { error: 'Query parameters not yet supported' });
-	} else if (!event.pathParameters) {
-		logger.error('Path parameter must be provided to /flight/:flightId/seats. Details: ' + event);
-		return constructResponse(400, { error: 'Flight number required' });
-	} else if (!event.pathParameters.flightId || !event.pathParameters.row || !event.pathParameters.seatId) {
-		logger.error('Flight number, row, and seat path parameters must be provided to /flight/:flightId/seats. Details: ' + event);
-		return constructResponse(400, { error: 'Flight number, row, and seat required' });
-	} else if (event.body) {
-		logger.error('Unwanted body. Details: ' + event);
-		return constructResponse(400, { error: 'Request body required' });
+	const errResp = checkPreconditions(event, ['flightId', 'row', 'seatId'], false, '/flight/:flightNumber/ticket');
+	if (errResp) {
+		return errResp;
 	} else {
 		let response = {};
 		const firstResult = got(
@@ -111,18 +76,9 @@ function deleteTicket(event) {
 }
 
 async function getBooking(event) {
-	if (event.queryStringParameters) {
-		logger.error('Unwanted query parameters provided. Details: ' + event);
-		return constructResponse(400, { error: 'Query parameters not supported' });
-	} else if (event.multiValueQueryStringParameters) {
-		logger.error('Unwanted multi-value query parameters provided. Details: ' + event);
-		return constructResponse(400, { error: 'Query parameters not supported' });
-	} else if (!event.pathParameters) {
-		logger.error('Path parameter must be provided to /booking/. Details: ' + event);
-		return constructResponse(400, { error: 'Booking ID required' });
-	} else if (!event.pathParameters.bookingCode) {
-		logger.error('Booking code must be provided to /booking/. Details: ' + event);
-		return constructResponse(400, { error: 'Booking code required' });
+	const errResp = checkPreconditions(event, ['bookingCode'], false, '/booking/:bookingCode');
+	if (errResp) {
+		return errResp;
 	} else {
 		const resp = await got(`${bookingEndpoint}/booking/details/bookings/${event.pathParameters.bookingCode}`);
 		return constructResponse(resp.statusCode, resp.body);
@@ -130,21 +86,9 @@ async function getBooking(event) {
 }
 
 async function putBooking(event) {
-	if (event.queryStringParameters) {
-		logger.error('Unwanted query parameters provided. Details: ' + event);
-		return constructResponse(400, { error: 'Query parameters not yet supported' });
-	} else if (event.multiValueQueryStringParameters) {
-		logger.error('Unwanted multi-value query parameters provided. Details: ' + event);
-		return constructResponse(400, { error: 'Query parameters not yet supported' });
-	} else if (!event.pathParameters) {
-		logger.error('Path parameter must be provided to /booking/. Details: ' + event);
-		return constructResponse(400, { error: 'Booking code required' });
-	} else if (!event.pathParameters.bookingCode) {
-		logger.error('Path parameter must be provided to /booking/. Details: ' + event);
-		return constructResponse(400, { error: 'Flight number, row, and seat required' });
-	} else if (!event.body) {
-		logger.error('Body required. Details: ' + event);
-		return constructResponse(400, { error: 'Request body required' });
+	const errResp = checkPreconditions(event, ['bookingCode'], true, '/booking/:bookingCode');
+	if (errResp) {
+		return errResp;
 	} else {
 		let body = JSON.parse(event.body);
 		if (body.price) {
@@ -159,18 +103,9 @@ async function putBooking(event) {
 }
 
 function deleteBooking(event) {
-	if (event.queryStringParameters) {
-		logger.error('Unwanted query parameters provided. Details: ' + event);
-		return constructResponse(400, { error: 'Query parameters not supported' });
-	} else if (event.multiValueQueryStringParameters) {
-		logger.error('Unwanted multi-value query parameters provided. Details: ' + event);
-		return constructResponse(400, { error: 'Query parameters not supported' });
-	} else if (!event.pathParameters) {
-		logger.error('Path parameter must be provided to /booking/. Details: ' + event);
-		return constructResponse(400, { error: 'Booking ID required' });
-	} else if (!event.pathParameters.bookingCode) {
-		logger.error('Booking code must be provided to /booking/. Details: ' + event);
-		return constructResponse(400, { error: 'Booking code required' });
+	const errResp = checkPreconditions(event, ['bookingCode'], false, '/booking/:bookingCode');
+	if (errResp) {
+		return errResp;
 	} else {
 		let response = {};
 		const firstResult = got(`${bookingEndpoint}/booking/details/bookings/${event.pathParameters.bookingCode}`);
@@ -199,18 +134,9 @@ function deleteBooking(event) {
 module.exports = {
 	allSeatsOnFlight: async function(event) {
 		if (event.httpMethod === 'GET') {
-			if (event.queryStringParameters) {
-				logger.error('Unwanted query parameters provided. Details: ' + event);
-				return constructResponse(400, { error: 'Query parameters not supported' });
-			} else if (event.multiValueQueryStringParameters) {
-				logger.error('Unwanted multi-value query parameters provided. Details: ' + event);
-				return constructResponse(400, { error: 'Query parameters not supported' });
-			} else if (!event.pathParameters) {
-				logger.error('Path parameter must be provided to /flight/:flightId/seats. Details: ' + event);
-				return constructResponse(400, { error: 'Flight number required' });
-			} else if (!event.pathParameters.flightId) {
-				logger.error('Flight number path parameter must be provided to /flight/:flightId/seats. Details: ' + event);
-				return constructResponse(400, { error: 'Flight number required' });
+			const errResp = checkPreconditions(event, ['flightId'], false, '/flight/:flightNumber/seats');
+			if (errResp) {
+				return errResp;
 			} else {
 				const resp = await got(`${searchEndpoint}/seats?flight=${event.pathParameters.flightId}`);
 				return constructResponse(resp.statusCode, resp.body);
@@ -223,18 +149,9 @@ module.exports = {
 
 	oneSeat: async function(event) {
 		if (event.httpMethod === 'GET') {
-			if (event.queryStringParameters) {
-				logger.error('Unwanted query parameters provided. Details: ' + event);
-				return constructResponse(400, { error: 'Query parameters not supported' });
-			} else if (event.multiValueQueryStringParameters) {
-				logger.error('Unwanted multi-value query parameters provided. Details: ' + event);
-				return constructResponse(400, { error: 'Query parameters not supported' });
-			} else if (!event.pathParameters) {
-				logger.error('Path parameter must be provided to /flight/:flightId/seats. Details: ' + event);
-				return constructResponse(400, { error: 'Flight number required' });
-			} else if (!event.pathParameters.flightId || !event.pathParameters.row || !event.pathParameters.seatId) {
-				logger.error('Flight number path parameter must be provided to /flight/:flightId/seats. Details: ' + event);
-				return constructResponse(400, { error: 'Flight number required' });
+			const errResp = checkPreconditions(event, ['flightId', 'row', 'seatId'], false, '/flight/:flightNumber/seat');
+			if (errResp) {
+				return errResp;
 			} else {
 				const resp = await got(
 					`${bookingEndpoint}/details/flights/${event.pathParameters.flightId}/rows/${event.pathParameters.row}/seats/${event.pathParameters.seatId}`);

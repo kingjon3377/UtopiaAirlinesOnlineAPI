@@ -3,19 +3,14 @@ const got = require('got');
 const searchEndpoint = process.env.SEARCH_ENDPOINT;
 const logger = require('../util/logger').createLogger('flightsController');
 const constructResponse = require ('../util/construct_response');
+const checkPreconditions = require('../util/check_preconditions');
 
 module.exports = {
 	allFlights: async function(event) {
 		if (event.httpMethod === 'GET') {
-			if (event.queryStringParameters) {
-				logger.error('Unwanted query parameters provided. Details: ' + event);
-				return constructResponse(400, { error: 'Query parameters not yet supported' });
-			} else if (event.multiValueQueryStringParameters) {
-				logger.error('Unwanted multi-value query parameters provided. Details: ' + event);
-				return constructResponse(400, { error: 'Query parameters not yet supported' });
-			} else if (event.pathParameters) {
-				logger.error('Unwanted path parameters provided to /flights. Details: ' + event);
-				return constructResponse(400, { error: 'Path parameters not supported' });
+			const errResp = checkPreconditions(event, false, false, '/flights');
+			if (errResp) {
+				return errResp;
 			} else {
 				const resp = await got(`${searchEndpoint}/flights`);
 				return constructResponse(resp.statusCode, resp.body);
@@ -28,18 +23,9 @@ module.exports = {
 
 	oneFlight: async function(event) {
 		if (event.httpMethod === 'GET') {
-			if (event.queryStringParameters) {
-				logger.error('Unwanted query parameters provided. Details: ' + event);
-				return constructResponse(400, { error: 'Query parameters not supported' });
-			} else if (event.multiValueQueryStringParameters) {
-				logger.error('Unwanted multi-value query parameters provided. Details: ' + event);
-				return constructResponse(400, { error: 'Query parameters not supported' });
-			} else if (!event.pathParameters) {
-				logger.error('Path parameter must be provided to /flight/. Details: ' + event);
-				return constructResponse(400, { error: 'Flight number required' });
-			} else if (!event.pathParameters.flightId) {
-				logger.error('Flight number path parameter must be provided to /flight/. Details: ' + event);
-				return constructResponse(400, { error: 'Flight number required' });
+			const errResp = checkPreconditions(event, ['flightId'], false, '/flights');
+			if (errResp) {
+				return errResp;
 			} else {
 				const resp = await got(`${searchEndpoint}/flightDetails?flight=${event.pathParameters.flightId}`);
 				return constructResponse(resp.statusCode, resp.body);

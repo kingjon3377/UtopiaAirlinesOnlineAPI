@@ -1,8 +1,8 @@
 'use strict';
 const got = require('got');
 const searchEndpoint = process.env.SEARCH_ENDPOINT;
-const constructResponse = require ('../util/construct_response');
 const checkPreconditions = require('../util/check_preconditions');
+const constructResponseFrom = require('../util/construct_response_from');
 
 module.exports = {
 	allAirports: async function(event) {
@@ -10,8 +10,7 @@ module.exports = {
 		if (errResp) {
 			return errResp;
 		} else {
-			const resp = await got(`${searchEndpoint}/airports`);
-			return constructResponse(resp.statusCode, resp.body);
+			return constructResponseFrom(await got(`${searchEndpoint}/airports`));
 		}
 	},
 
@@ -20,8 +19,7 @@ module.exports = {
 		if (errResp) {
 			return errResp;
 		} else {
-			const resp = await got(`${searchEndpoint}/airportDetails?airport=${event.pathParameters.code}`);
-			return constructResponse(resp.statusCode, resp.body);
+			return constructResponseFrom(await got(`${searchEndpoint}/airportDetails?airport=${event.pathParameters.code}`));
 		}
 	}
 };

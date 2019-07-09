@@ -6,6 +6,7 @@ const cancellationEndpoint = process.env.CANCELLATION_ENDPOINT;
 const logger = require('../util/logger').createLogger('ticketsController');
 const constructResponse = require ('../util/construct_response');
 const checkPreconditions = require('../util/check_preconditions');
+const constructResponseFrom = require('../util/construct_response_from');
 
 async function putTicket(event) {
 	const errResp = checkPreconditions(event, ['flightId', 'row', 'seatId'], true, '/flight/:flightNumber/ticket', 'PUT', 'POST, PUT, and DELETE');
@@ -14,14 +15,12 @@ async function putTicket(event) {
 	} else {
 		let body = JSON.parse(event.body);
 		if (body.price) {
-			const resp = await got.put(
+			return constructResponseFrom(await got.put(
 				`${bookingEndpoint}/booking/pay/flights/${event.pathParameters.flightId}/rows/${event.pathParameters.row}/seats/${event.pathParameters.seatId}`,
-				{ body: {'price': body.price }});
-			return constructResponse(resp.statusCode, resp.body);
+				{ body: {'price': body.price }}));
 		} else {
-			const resp = await got.put(
-				`${bookingEndpoint}/booking/extend/flights/${event.pathParameters.flightId}/rows/${event.pathParameters.row}/seats/${event.pathParameters.seatId}`);
-			return constructResponse(resp.statusCode, resp.body);
+			return constructResponseFrom(await got.put(
+				`${bookingEndpoint}/booking/extend/flights/${event.pathParameters.flightId}/rows/${event.pathParameters.row}/seats/${event.pathParameters.seatId}`));
 		}
 	}
 }
@@ -36,11 +35,10 @@ async function postTicket(event) {
 			logger.error('Reserver required in body. Details: ' + event);
 			return constructResponse(400, { error: 'Reserver required' });
 		} else {
-			const resp = await got.put(
+			return constructResponseFrom(await got.put(
 				// FIXME: Should call "book", not "pay"
 				`${bookingEndpoint}/booking/pay/flights/${event.pathParameters.flightId}/rows/${event.pathParameters.row}/seats/${event.pathParameters.seatId}`,
-				{ body: `{ 'id': ${body.reserver.id} }` });
-			return constructResponse(resp.statusCode, resp.body);
+				{ body: `{ 'id': ${body.reserver.id} }` }));
 		}
 	}
 }
@@ -59,13 +57,11 @@ function deleteTicket(event) {
 				response = constructResponse(204, '');
 			} else if (body.price) {
 				// DELETE makes more sense, but the cancellation service uses PUT at the moment
-				const secondResult = await got.put(
-					`${cancellationEndpoint}/cancel/ticket/flight/${event.pathParameters.flightId}/row/${event.pathParameters.row}/seat/${event.pathParameters.seatId}`);
-				response = constructResponse(secondResult.statusCode, secondResult.body);
+				return constructResponseFrom(await got.put(
+					`${cancellationEndpoint}/cancel/ticket/flight/${event.pathParameters.flightId}/row/${event.pathParameters.row}/seat/${event.pathParameters.seatId}`));
 			} else {
-				const secondResult = await got.delete(
-					`${bookingEndpoint}/booking/book/flights/${event.pathParameters.flightId}/rows/${event.pathParameters.row}/seats/${event.pathParameters.seatId}`);
-				response = constructResponse(secondResult.statusCode, secondResult.body);
+				return constructResponseFrom(await got.delete(
+					`${bookingEndpoint}/booking/book/flights/${event.pathParameters.flightId}/rows/${event.pathParameters.row}/seats/${event.pathParameters.seatId}`));
 			}
 		}, (err) => {
 			response = constructResponse(500, { error: 'Error in backend service' });
@@ -80,8 +76,7 @@ async function getBooking(event) {
 	if (errResp) {
 		return errResp;
 	} else {
-		const resp = await got(`${bookingEndpoint}/booking/details/bookings/${event.pathParameters.bookingCode}`);
-		return constructResponse(resp.statusCode, resp.body);
+		return constructResponseFrom(await got(`${bookingEndpoint}/booking/details/bookings/${event.pathParameters.bookingCode}`));
 	}
 }
 
@@ -92,12 +87,10 @@ async function putBooking(event) {
 	} else {
 		let body = JSON.parse(event.body);
 		if (body.price) {
-			const resp = await got.put(`${bookingEndpoint}/booking/details/bookings/${event.pathParameters.bookingCode}`,
-				{ body: `{'price': ${body.price} }` });
-			return constructResponse(resp.statusCode, resp.body);
+			return constructResponseFrom(await got.put(`${bookingEndpoint}/booking/details/bookings/${event.pathParameters.bookingCode}`,
+				{ body: `{'price': ${body.price} }` }));
 		} else {
-			const resp = await got.put(`${bookingEndpoint}/booking/extend/bookings/${event.pathParameters.bookingCode}`);
-			return constructResponse(resp.statusCode, resp.body);
+			return constructResponseFrom(await got.put(`${bookingEndpoint}/booking/extend/bookings/${event.pathParameters.bookingCode}`));
 		}
 	}
 }
@@ -115,13 +108,11 @@ function deleteBooking(event) {
 				response = constructResponse(204, '');
 			} else if (body.price) {
 				// DELETE makes more sense, but the cancellation service uses PUT at the moment
-				const secondResult = await got.put(
-					`${cancellationEndpoint}/cancel/ticket/booking/${event.pathParameters.bookingCode}`);
-				response = constructResponse(secondResult.statusCode, secondResult.body);
+				response = constructResponseFrom(await got.put(
+					`${cancellationEndpoint}/cancel/ticket/booking/${event.pathParameters.bookingCode}`));
 			} else {
-				const secondResult = await got.delete(
-					`${bookingEndpoint}/booking/book/bookings/${event.pathParameters.bookingCode}`);
-				response = constructResponse(secondResult.statusCode, secondResult.body);
+				response = constructResponseFrom(await got.delete(
+					`${bookingEndpoint}/booking/book/bookings/${event.pathParameters.bookingCode}`));
 			}
 		}, (err) => {
 			response = constructResponse(500, { error: 'Error in backend service' });
@@ -137,8 +128,7 @@ module.exports = {
 		if (errResp) {
 			return errResp;
 		} else {
-			const resp = await got(`${searchEndpoint}/seats?flight=${event.pathParameters.flightId}`);
-			return constructResponse(resp.statusCode, resp.body);
+			return constructResponseFrom(await got(`${searchEndpoint}/seats?flight=${event.pathParameters.flightId}`));
 		}
 	},
 
@@ -147,9 +137,8 @@ module.exports = {
 		if (errResp) {
 			return errResp;
 		} else {
-			const resp = await got(
-				`${bookingEndpoint}/details/flights/${event.pathParameters.flightId}/rows/${event.pathParameters.row}/seats/${event.pathParameters.seatId}`);
-			return constructResponse(resp.statusCode, resp.body);
+			return constructResponseFrom(await got(
+				`${bookingEndpoint}/details/flights/${event.pathParameters.flightId}/rows/${event.pathParameters.row}/seats/${event.pathParameters.seatId}`));
 		}
 	},
 

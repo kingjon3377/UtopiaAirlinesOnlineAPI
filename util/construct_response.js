@@ -1,3 +1,4 @@
+'use strict';
 function constructResponse(statusCode, body) {
 	return {
 		statusCode,

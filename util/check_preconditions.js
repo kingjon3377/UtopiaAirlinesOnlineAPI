@@ -1,3 +1,4 @@
+'use strict';
 const logger = require('../util/logger').createLogger('airportsController');
 const constructResponse = require ('../util/construct_response');
 

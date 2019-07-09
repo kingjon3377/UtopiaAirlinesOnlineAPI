@@ -1,7 +1,6 @@
 'use strict';
 const got = require('got');
 const searchEndpoint = process.env.SEARCH_ENDPOINT;
-const logger = require('../util/logger').createLogger('airportsController');
 const constructResponse = require ('../util/construct_response');
 const checkPreconditions = require('../util/check_preconditions');
 

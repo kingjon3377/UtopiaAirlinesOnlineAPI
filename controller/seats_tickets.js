@@ -57,10 +57,10 @@ function deleteTicket(event) {
 				response = constructResponse(204, '');
 			} else if (body.price) {
 				// DELETE makes more sense, but the cancellation service uses PUT at the moment
-				return constructResponseFrom(await got.put(
+				response = constructResponseFrom(await got.put(
 					`${cancellationEndpoint}/cancel/ticket/flight/${event.pathParameters.flightId}/row/${event.pathParameters.row}/seat/${event.pathParameters.seatId}`));
 			} else {
-				return constructResponseFrom(await got.delete(
+				response = constructResponseFrom(await got.delete(
 					`${bookingEndpoint}/booking/book/flights/${event.pathParameters.flightId}/rows/${event.pathParameters.row}/seats/${event.pathParameters.seatId}`));
 			}
 		}, (err) => {

@@ -1,22 +1,25 @@
 'use strict';
-const request = require('request');
-const router = require('express').Router();
+const got = require('got');
 const searchEndpoint = process.env.SEARCH_ENDPOINT;
-const handleBackendResponse = require('../util/handle_backend_response.js');
-const logger = require('../util/logger').createLogger('flightsController');
+const checkPreconditions = require('../util/check_preconditions');
+const constructResponseFrom = require('../util/construct_response_from');
 
-router.get('/flights', function(req, res) {
-	request.get(`${searchEndpoint}/flights`, {}, handleBackendResponse(res, logger));
-});
+module.exports = {
+	allFlights: async function(event) {
+		const errResp = checkPreconditions(event, false, false, '/flights', 'GET', 'GET');
+		if (errResp) {
+			return errResp;
+		} else {
+			return constructResponseFrom(await got(`${searchEndpoint}/flights`));
+		}
+	},
 
-router.get('/flight/:flightId', function(req, res) {
-	if (!req.params.flightId) {
-		res.status(400);
-		res.send('Flight number required');
-	} else {
-		request.get(`${searchEndpoint}/flightDetails?flight=${req.params.flightId}`, {},
-			handleBackendResponse(res, logger));
+	oneFlight: async function(event) {
+		const errResp = checkPreconditions(event, ['flightId'], false, '/flights', 'GET', 'GET');
+		if (errResp) {
+			return errResp;
+		} else {
+			return constructResponseFrom(await got(`${searchEndpoint}/flightDetails?flight=${event.pathParameters.flightId}`));
+		}
 	}
-});
-
-module.exports = router;
+};

@@ -1,22 +1,25 @@
 'use strict';
-const request = require('request');
-const router = require('express').Router();
+const got = require('got');
 const searchEndpoint = process.env.SEARCH_ENDPOINT;
-const handleBackendResponse = require('../util/handle_backend_response.js');
-const logger = require('../util/logger').createLogger('airportsController');
+const checkPreconditions = require('../util/check_preconditions');
+const constructResponseFrom = require('../util/construct_response_from');
 
-router.get('/airports', function(req, res) {
-	request.get(`${searchEndpoint}/airports`, {}, handleBackendResponse(res, logger));
-});
+module.exports = {
+	allAirports: async function(event) {
+		const errResp = checkPreconditions(event, false, false, '/airports', 'GET', 'GET');
+		if (errResp) {
+			return errResp;
+		} else {
+			return constructResponseFrom(await got(`${searchEndpoint}/airports`));
+		}
+	},
 
-router.get('/airport/:code', function(req, res) {
-	if (!req.params.code) {
-		res.status(400);
-		res.send('Airport code required');
-	} else {
-		request.get(`${searchEndpoint}/airportDetails?airport=${req.params.code}`,
-			{}, handleBackendResponse(res, logger));
+	oneAirport: async function(event) {
+		const errResp = checkPreconditions(event, ['code'], false, '/airport/', 'GET', 'GET');
+		if (errResp) {
+			return errResp;
+		} else {
+			return constructResponseFrom(await got(`${searchEndpoint}/airportDetails?airport=${event.pathParameters.code}`));
+		}
 	}
-});
-
-module.exports = router;
+};

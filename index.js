@@ -1,16 +1,37 @@
 const dotenv = require('dotenv');
 dotenv.config();
 const logger = require('./util/logger').createLogger('main');
+const airportController = require('./controller/airports');
+const flightController = require('./controller/flights');
+const ticketController = require('./controller/seats_tickets');
 
-const express = require('express');
-const app = express();
-app.use(express.json());
-app.use(require('./controller/airports'));
-app.use(require('./controller/flights'));
-app.use(require('./controller/seats_tickets'));
-const server = app.listen(9000);
-logger.info('Server running on port 9000');
-module.exports = server;
-module.exports.stop = function() {
-	server.close();
+exports.handler = async (event) => {
+	if (!event) {
+		logger.error('Null event');
+		return null;
+	} else if (!event.resource) {
+		logger.error('Event with null resource. Full details: ' + JSON.stringify(event));
+		return null;
+	}
+	switch (event.resource) {
+	case '/airports':
+		return airportController.allAirports(event);
+	case '/airport/{code}':
+		return airportController.oneAirport(event);
+	case '/flights':
+		return flightController.allFlights(event);
+	case '/flight/{flightId}':
+		return flightController.oneFlight(event);
+	case '/flight/{flightId}/seats':
+		return ticketController.allSeatsOnFlight(event);
+	case '/flight/{flightId}/seat/{row}/{seatId}':
+		return ticketController.oneSeat(event);
+	case '/flight/{flightId}/seat/{row}/{seatId}/ticket':
+		return ticketController.ticketDispatcher(event);
+	case '/booking/{bookingCode}':
+		return ticketController.bookingDispatcher(event);
+	default:
+		logger.error('Unhandled route! Event details: ' + JSON.stringify(event));
+		return null;
+	}
 };
